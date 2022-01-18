@@ -106,6 +106,7 @@ partial class Program {
 					if (a is null) {
 						var an = assemblies.Add (pe);
 						assemblies.SelectedObject = an;
+						assemblies.GoTo (an);
 					}
 					current_metadata = pe;
 				}
