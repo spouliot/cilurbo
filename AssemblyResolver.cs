@@ -23,10 +23,20 @@ class AssemblyResolver : IAssemblyResolver {
 		}
 
 		try {
+			AddSearchDirectory (Path.GetDirectoryName (file));
+			return TryLoadKnownLocation (file);
+		}
+		catch (Exception) {
+			return null;
+		}
+	}
+
+	static PEFile? TryLoadKnownLocation (string file)
+	{
+		try {
 			PEFile pe = new (file);
 			// TODO error checking
-			if (assemblies_map.TryAdd (pe.Name, pe))
-				AddSearchDirectory (Path.GetDirectoryName (file));
+			assemblies_map.TryAdd (pe.Name, pe);
 			return pe;
 		}
 		catch (Exception) {
@@ -43,7 +53,12 @@ class AssemblyResolver : IAssemblyResolver {
 		foreach (var dir in directories) {
 			foreach (var ext in assemblies_file_extensions) {
 				var file = Path.Combine (dir, reference.Name + ext);
-				return Load (file);
+				// no logging for missing files since we're guessing here
+				if (File.Exists (file)) {
+					var pe = TryLoadKnownLocation (file);
+					if (pe is not null)
+						return pe;
+				}
 			}
 		}
 		return null;
