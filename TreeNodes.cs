@@ -146,8 +146,12 @@ class TypeTreeNode : ITreeNode {
 		foreach (var b in t.DirectBaseTypes.OrderBy (b => b.Name)) {
 			// if (type.MetadataToken == b.MetadataToken)
 			// 	continue;
-			if (t.Kind != TypeKind.Interface || t.Kind == b.Kind)
-				nodes.Add (new BaseTypeNode (b.GetDefinition ()!));
+			if (t.Kind != TypeKind.Interface || t.Kind == b.Kind) {
+				var d = b.GetDefinition ();
+				if (d is null)
+					continue;
+				nodes.Add (new BaseTypeNode (d));
+			}
 		}
 		foreach (var n in t.NestedTypes.OrderBy (n => n.Name)) {
 			nodes.Add (new TypeTreeNode (n, typeSystem));
