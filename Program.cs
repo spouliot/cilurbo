@@ -1,8 +1,7 @@
-﻿using System.Reflection;
-
-using Terminal.Gui;
+using System.Reflection;
 using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.Decompiler.TypeSystem;
+using Terminal.Gui;
 
 [assembly: AssemblyVersion ("0.1.0.0")]
 partial class Program {
@@ -20,20 +19,21 @@ partial class Program {
 
 	static Languages Language = Languages.CSharp;
 
-	static int Main (string[] args)
+	static int Main (string [] args)
 	{
 		try {
 			Application.Init ();
 			var rv = SetupUI (Application.Top);
 			if (rv == 0) {
-				foreach (var arg in args)
+				foreach (var arg in args) {
+					Console.WriteLine ($"Loading {arg}");
 					LoadFile (arg);
+				}
 			}
 			Application.Run ();
 			Application.Shutdown ();
 			return rv;
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			Console.WriteLine (e);
 			return 1;
 		}
@@ -79,11 +79,11 @@ partial class Program {
 		switch (metadata) {
 		case PEFile file:
 			source_tab.Text = file.Name;
-			textview.Text = file.Disassemble();
+			textview.Text = file.Disassemble ();
 			break;
 		case IEntity entity:
 			source_tab.Text = entity.Name;
-			textview.Text = entity.Disassemble();
+			textview.Text = entity.Disassemble ();
 			break;
 		default:
 			source_tab.Text = "-";
@@ -102,7 +102,7 @@ partial class Program {
 			break;
 		case IEntity entity:
 			source_tab.Text = entity.Name;
-			textview.Text = entity.Decompile();
+			textview.Text = entity.Decompile ();
 			break;
 		default:
 			source_tab.Text = "-";

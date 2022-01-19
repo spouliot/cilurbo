@@ -17,7 +17,7 @@ static class Disassembler {
 		rd.WriteModuleHeader (file);
 		return writer.ToString ();
 	}
-	
+
 	static public string Disassemble (this IEntity entity)
 	{
 		using var writer = new StringWriter ();

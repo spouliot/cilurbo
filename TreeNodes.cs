@@ -1,10 +1,8 @@
 using System.Reflection.Metadata;
 using System.Text;
-
-using Terminal.Gui.Trees;
-
 using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.Decompiler.TypeSystem;
+using Terminal.Gui.Trees;
 
 class AssemblyNode : ITreeNode {
 	public AssemblyNode (PEFile file)
@@ -59,11 +57,11 @@ class AssemblyNode : ITreeNode {
 		Children = nodes;
 	}
 
-    public string Text { get; set; }
+	public string Text { get; set; }
 
-    public IList<ITreeNode> Children { get; }
+	public IList<ITreeNode> Children { get; }
 
-    public object Tag { get; set; }
+	public object Tag { get; set; }
 }
 
 class AssemblyReferenceNode : ITreeNode {
@@ -82,7 +80,7 @@ class AssemblyReferenceNode : ITreeNode {
 }
 
 class ModuleReferenceNode : ITreeNode {
-	
+
 	public ModuleReferenceNode (string name, ModuleReference mr)
 	{
 		Tag = mr;
@@ -98,7 +96,7 @@ class ModuleReferenceNode : ITreeNode {
 
 class NamespaceTreeNode : ITreeNode {
 
-    public NamespaceTreeNode (string fullname, string parent, IDecompilerTypeSystem typeSystem)
+	public NamespaceTreeNode (string fullname, string parent, IDecompilerTypeSystem typeSystem)
 	{
 		Tag = fullname;
 		if (fullname.Length == 0)
@@ -116,11 +114,11 @@ class NamespaceTreeNode : ITreeNode {
 		Children = types;
 	}
 
-    public string Text { get; set; }
+	public string Text { get; set; }
 
-    public IList<ITreeNode> Children { get; private set; }
+	public IList<ITreeNode> Children { get; private set; }
 
-    public object Tag { get; set; }
+	public object Tag { get; set; }
 }
 
 class TypeTreeNode : ITreeNode {
@@ -130,12 +128,12 @@ class TypeTreeNode : ITreeNode {
 		Text = "[T] " + type.Name;
 
 		TypeDefinitionHandle handle = (TypeDefinitionHandle) type.MetadataToken;
-        if (typeSystem.MainModule.ResolveEntity (handle) is not ITypeDefinition t)
-            throw new InvalidOperationException ();
-        Tag = t;
+		if (typeSystem.MainModule.ResolveEntity (handle) is not ITypeDefinition t)
+			throw new InvalidOperationException ();
+		Tag = t;
 
 		List<ITreeNode> nodes = new ();
-		
+
 		// var baseTypes = t.GetNonInterfaceBaseTypes().Where (b => b.DeclaringType != t).ToList();
 		// var b2 = t.GetAllBaseTypes ();
 		// var b3 = t.GetAllBaseTypeDefinitions ();
@@ -178,15 +176,15 @@ class TypeTreeNode : ITreeNode {
 		Children = nodes;
 	}
 
-    public string Text { get; set; }
+	public string Text { get; set; }
 
-    public IList<ITreeNode> Children { get; private set; }
+	public IList<ITreeNode> Children { get; private set; }
 
-    public object Tag { get; set; }
+	public object Tag { get; set; }
 }
 
 class BaseTypeNode : ITreeNode {
-	
+
 	public BaseTypeNode (ITypeDefinition type)
 	{
 		if (type.Kind == TypeKind.Interface)
@@ -207,7 +205,7 @@ abstract class MemberNode : ITreeNode {
 
 	protected abstract char InstanceCode { get; }
 	protected abstract char StaticCode { get; }
-	
+
 #pragma warning disable 8618
 	protected MemberNode ()
 	{
@@ -236,9 +234,9 @@ abstract class MemberNode : ITreeNode {
 }
 
 class FieldNode : MemberNode {
-    protected override char InstanceCode => 'f';
+	protected override char InstanceCode => 'f';
 
-    protected override char StaticCode => 'F';
+	protected override char StaticCode => 'F';
 
 	public FieldNode (IField field) : base (field)
 	{
@@ -246,9 +244,9 @@ class FieldNode : MemberNode {
 }
 
 class EventNode : MemberNode {
-    protected override char InstanceCode => 'e';
+	protected override char InstanceCode => 'e';
 
-    protected override char StaticCode => 'E';
+	protected override char StaticCode => 'E';
 
 	public EventNode (IEvent @event) : base (@event)
 	{
@@ -256,9 +254,9 @@ class EventNode : MemberNode {
 }
 
 class PropertyNode : MemberNode {
-    protected override char InstanceCode => 'p';
+	protected override char InstanceCode => 'p';
 
-    protected override char StaticCode => 'P';
+	protected override char StaticCode => 'P';
 
 	public PropertyNode (IProperty property) : base (property)
 	{
@@ -266,9 +264,9 @@ class PropertyNode : MemberNode {
 }
 
 class MethodNode : MemberNode {
-    protected override char InstanceCode => 'm';
+	protected override char InstanceCode => 'm';
 
-    protected override char StaticCode => 'M';
+	protected override char StaticCode => 'M';
 
 	public MethodNode (IMethod method)
 	{
@@ -293,9 +291,9 @@ class MethodNode : MemberNode {
 }
 
 class ConstructorNode : MemberNode {
-    protected override char InstanceCode => 'c';
+	protected override char InstanceCode => 'c';
 
-    protected override char StaticCode => 'C';
+	protected override char StaticCode => 'C';
 
 	public ConstructorNode (IMethod method)
 	{

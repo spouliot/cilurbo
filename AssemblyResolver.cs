@@ -25,8 +25,7 @@ class AssemblyResolver : IAssemblyResolver {
 		try {
 			AddSearchDirectory (Path.GetDirectoryName (file));
 			return TryLoadKnownLocation (file);
-		}
-		catch (Exception) {
+		} catch (Exception) {
 			return null;
 		}
 	}
@@ -38,8 +37,7 @@ class AssemblyResolver : IAssemblyResolver {
 			// TODO error checking
 			assemblies_map.TryAdd (pe.Name, pe);
 			return pe;
-		}
-		catch (Exception) {
+		} catch (Exception) {
 			return null;
 		}
 	}
@@ -73,11 +71,11 @@ class AssemblyResolver : IAssemblyResolver {
 
 	public PEFile? ResolveModule (PEFile mainModule, string moduleName)
 	{
-		throw new NotImplementedException();
+		throw new NotImplementedException ();
 	}
 
 	public Task<PEFile?> ResolveModuleAsync (PEFile mainModule, string moduleName)
 	{
-		throw new NotImplementedException();
+		throw new NotImplementedException ();
 	}
 }

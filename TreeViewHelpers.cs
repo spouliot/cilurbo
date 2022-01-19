@@ -1,7 +1,6 @@
+using ICSharpCode.Decompiler.Metadata;
 using Terminal.Gui;
 using Terminal.Gui.Trees;
-
-using ICSharpCode.Decompiler.Metadata;
 
 static class TreeViewHelpers {
 

@@ -1,11 +1,10 @@
 using System.Diagnostics;
 using System.Reflection.Metadata.Ecma335;
 using System.Text;
-
-using Terminal.Gui;
-using Terminal.Gui.Trees;
 using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.Decompiler.TypeSystem;
+using Terminal.Gui;
+using Terminal.Gui.Trees;
 
 partial class Program {
 
@@ -66,7 +65,7 @@ partial class Program {
 				new ("Disassembler View (IL)", "", ViewDisassembler, null, null, Key.F2),
 				new ("Decompiler View (C#)", "", ViewDecompiler, null, null, Key.F3),
 				new ("Metadata Tables", "", ViewMetadataTables, () => { return assemblies.SelectedObject is AssemblyNode; }, null, Key.F4),
-				null,	
+				null,
 				new ("Collapse all tree nodes", "", ViewCollapseAllNodes, null, null, Key.CtrlMask | Key.U),
 				null,
 				new ("Enlarge TreeView", "", EnlargeTreeView, null, null, Key.ShiftMask | Key.CursorRight),
@@ -113,14 +112,14 @@ partial class Program {
 			}
 			break;
 		case BaseTypeNode btn:
-			var f =	assemblies.Select ((n) => btn.Tag.Equals (n.Tag) && (n is TypeTreeNode));
+			var f = assemblies.Select ((n) => btn.Tag.Equals (n.Tag) && (n is TypeTreeNode));
 			// it might not be loaded yet (or not found)
 			if (f is null) {
 				var pe = (btn.Tag as ITypeDefinition)!.ParentModule.PEFile;
 				if (pe is not null) {
 					assemblies.Add (pe);
 					// try again with the assembly loaded
-					f =	assemblies.Select ((n) => btn.Tag.Equals (n.Tag) && (n is TypeTreeNode));
+					f = assemblies.Select ((n) => btn.Tag.Equals (n.Tag) && (n is TypeTreeNode));
 				}
 			}
 			if (f is not null)
@@ -251,7 +250,7 @@ partial class Program {
 			case MetadataTables.AssemblyRef:
 				if (e.Table.ExtendedProperties ["PE"] is not PEFile pe)
 					break;
-				var handle = MetadataTokens.AssemblyReferenceHandle ((int) e.Table.Rows[e.Row][0]);
+				var handle = MetadataTokens.AssemblyReferenceHandle ((int) e.Table.Rows [e.Row] [0]);
 				var ar = new AssemblyReference (pe.Metadata, handle);
 				var a = AssemblyResolver.Resolver.Resolve (ar);
 				if (a is not null) {
@@ -293,7 +292,7 @@ partial class Program {
 		// menu is disabled (same condition) but this gets called anyway if the (menu) shortcut is used
 		if (assemblies.SelectedObject.Tag is not PEFile pe)
 			return;
-		
+
 		var tab = GetMetadataTab (pe);
 		tabs.SelectedTab = tab;
 		tab.View.SetFocus ();

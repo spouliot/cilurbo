@@ -18,7 +18,7 @@ class MetadataDataSource : IListDataSource {
 		MetadataTables.Constant,
 		MetadataTables.AssemblyRef,
 	};
-	
+
 	public int Count => tables.Count;
 
 	public int Length => 16;
@@ -59,19 +59,19 @@ class MetadataTables {
 		switch (Type.GetTypeCode (@enum.GetType ().GetEnumUnderlyingType ())) {
 		case TypeCode.Byte:
 		case TypeCode.SByte:
-			sb.Append (((byte)@enum).ToString ("x2"));
+			sb.Append (((byte) @enum).ToString ("x2"));
 			break;
 		case TypeCode.Int16:
 		case TypeCode.UInt16:
-			sb.Append (((short)@enum).ToString ("x4"));
+			sb.Append (((short) @enum).ToString ("x4"));
 			break;
 		case TypeCode.Int32:
 		case TypeCode.UInt32:
-			sb.Append (((int)@enum).ToString ("x8"));
+			sb.Append (((int) @enum).ToString ("x8"));
 			break;
 		case TypeCode.Int64:
 		case TypeCode.UInt64:
-			sb.Append (((long)@enum).ToString ("x16"));
+			sb.Append (((long) @enum).ToString ("x16"));
 			break;
 		}
 		var s = @enum.ToString ();
@@ -89,21 +89,21 @@ class MetadataTables {
 	}
 
 	//   							   1234567890123456
-	public const string MethodDef	= "0x06 MethodDef";
-	public const string MemberRef	= "0x0A MemberRef";
-	public const string Constant	= "0x0B Constant";
-	public const string AssemblyRef	= "0x23 AssemblyRef";
+	public const string MethodDef = "0x06 MethodDef";
+	public const string MemberRef = "0x0A MemberRef";
+	public const string Constant = "0x0B Constant";
+	public const string AssemblyRef = "0x23 AssemblyRef";
 
 	public static DataTable GetTable (string tableName, PEFile module)
 	{
-        return tableName switch {
+		return tableName switch {
 			MethodDef => GetMethodDefTable (module),
 			MemberRef => GetMemberRefTable (module),
 			Constant => GetConstantTable (module),
-            AssemblyRef => GetAssemblyRefTable( module),
-            _ => throw new NotImplementedException(),
-        };
-    }
+			AssemblyRef => GetAssemblyRefTable (module),
+			_ => throw new NotImplementedException (),
+		};
+	}
 
 	static DataTable CreateTable (PEFile module, string tableName)
 	{
@@ -143,7 +143,7 @@ class MetadataTables {
 		}
 		return dt;
 	}
-	
+
 	// 0x06 MethodDef
 	// https://github.com/stakx/ecma-335/blob/master/docs/ii.22.26-methoddef-0x06.md
 	static DataTable GetMethodDefTable (PEFile module)
@@ -160,7 +160,7 @@ class MetadataTables {
 		var m = module.Metadata;
 		foreach (var row in m.MethodDefinitions) {
 			var mdef = m.GetMethodDefinition (row);
-			dt.Rows.Add (new object [] { 
+			dt.Rows.Add (new object [] {
 				MetadataTokens.GetRowNumber (row),
 				MetadataTokens.GetToken (row).ToString ("x8"),
 				mdef.RelativeVirtualAddress.ToString ("x8"),
@@ -187,7 +187,7 @@ class MetadataTables {
 		var m = module.Metadata;
 		foreach (var row in m.MemberReferences) {
 			var mref = m.GetMemberReference (row);
-			dt.Rows.Add (new object [] { 
+			dt.Rows.Add (new object [] {
 				MetadataTokens.GetRowNumber (row),
 				MetadataTokens.GetToken (row).ToString ("x8"),
 				MetadataTokens.GetToken (mref.Parent).ToString ("x8"),
@@ -212,7 +212,7 @@ class MetadataTables {
 		for (var row = 1; row < m.GetTableRowCount (TableIndex.Constant); row++) {
 			var handle = MetadataTokens.ConstantHandle (row);
 			var c = m.GetConstant (handle);
-			dt.Rows.Add (new object [] { 
+			dt.Rows.Add (new object [] {
 				row,
 				MetadataTokens.GetToken (handle).ToString ("x8"),
 				GetEnum (c.TypeCode),
