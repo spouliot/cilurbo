@@ -1,3 +1,11 @@
+![screenshot](cilurbo.png)
+
+## Goals
+
+* Complete: disassembler, decompiler, metadata tables...
+* Keyboard driven
+* Easy to build, extend and update (to latest [ICSharpCode.Decompiler](https://github.com/icsharpcode/ILSpy/tree/master/ICSharpCode.Decompiler) versions)
+* Cross platform
 
 ## Metadata codes
 
@@ -34,3 +42,8 @@
 | F9       | Show menu              |
 | ENTER    | Active selection       |
 
+## TODO
+
+* Add missing metadata tables
+* Add decompiler options / preferences
+* Add analysis tools
