@@ -112,14 +112,14 @@ partial class Program {
 			}
 			break;
 		case BaseTypeNode btn:
-			var f = assemblies.Select ((n) => btn.Tag.Equals (n.Tag) && (n is TypeTreeNode));
+			var f = assemblies.Select ((n) => btn.Tag.Equals (n.Tag) && (n is TypeNode));
 			// it might not be loaded yet (or not found)
 			if (f is null) {
 				var pe = (btn.Tag as ITypeDefinition)!.ParentModule.PEFile;
 				if (pe is not null) {
 					assemblies.Add (pe);
 					// try again with the assembly loaded
-					f = assemblies.Select ((n) => btn.Tag.Equals (n.Tag) && (n is TypeTreeNode));
+					f = assemblies.Select ((n) => btn.Tag.Equals (n.Tag) && (n is TypeNode));
 				}
 			}
 			if (f is not null)

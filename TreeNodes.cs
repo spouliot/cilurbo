@@ -4,8 +4,26 @@ using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.Decompiler.TypeSystem;
 using Terminal.Gui.Trees;
 
-class AssemblyNode : ITreeNode {
-	public AssemblyNode (PEFile file)
+abstract class MetadataNode : ITreeNode {
+
+	protected MetadataNode (MetadataNode? parent)
+	{
+		Parent = parent;
+		Children = Array.Empty<ITreeNode> ();
+		Tag = Text = String.Empty;
+	}
+
+	public MetadataNode? Parent { get; }
+
+	public string Text { get; set; }
+
+	public IList<ITreeNode> Children { get; set; }
+
+	public object Tag { get; set; }
+}
+
+class AssemblyNode : MetadataNode {
+	public AssemblyNode (PEFile file) : base (null)
 	{
 		Tag = file;
 		var metadata = file.Metadata;
@@ -15,13 +33,12 @@ class AssemblyNode : ITreeNode {
 		sb.Append (aname).Append (" (").Append (ad.Version).Append (')');
 		Text = sb.ToString ();
 
-		DecompilerTypeSystem typeSystem = new (file, AssemblyResolver.Resolver,
-			TypeSystemOptions.Default | TypeSystemOptions.Uncached);
+		TypeSystem = new (file, AssemblyResolver.Resolver, TypeSystemOptions.Default | TypeSystemOptions.Uncached);
 
 		List<ITreeNode> nodes = new ();
-		SortedList<string, ITreeNode> references = new ();
+		SortedList<string, MetadataNode> references = new ();
 		foreach (var ar in file.AssemblyReferences) {
-			references.Add (ar.Name, new AssemblyReferenceNode (ar));
+			references.Add (ar.Name, new AssemblyReferenceNode (ar, this));
 		}
 		foreach (var node in references.Values) {
 			nodes.Add (node);
@@ -31,7 +48,7 @@ class AssemblyNode : ITreeNode {
 		foreach (var mrh in metadata.GetModuleReferences ()) {
 			var mr = metadata.GetModuleReference (mrh);
 			var name = metadata.GetString (mr.Name);
-			references.Add (name, new ModuleReferenceNode (name, mr));
+			references.Add (name, new ModuleReferenceNode (name, mr, this));
 		}
 		foreach (var node in references.Values) {
 			nodes.Add (node);
@@ -39,7 +56,7 @@ class AssemblyNode : ITreeNode {
 		references.Clear ();
 
 		List<string> list = new ();
-		foreach (var type in typeSystem.GetTopLevelTypeDefinitions ()) {
+		foreach (var type in TypeSystem.GetTopLevelTypeDefinitions ()) {
 			if (type.ParentModule.Name != aname)
 				continue;
 			var ns = type.Namespace;
@@ -48,7 +65,7 @@ class AssemblyNode : ITreeNode {
 		}
 		list.Sort ();
 		foreach (var ns in list) {
-			nodes.Add (new NamespaceTreeNode (ns, aname, typeSystem));
+			nodes.Add (new NamespaceNode (ns, aname, TypeSystem, this));
 		}
 		list.Clear ();
 
@@ -57,46 +74,30 @@ class AssemblyNode : ITreeNode {
 		Children = nodes;
 	}
 
-	public string Text { get; set; }
-
-	public IList<ITreeNode> Children { get; }
-
-	public object Tag { get; set; }
+	public DecompilerTypeSystem TypeSystem { get; private set; }
 }
 
-class AssemblyReferenceNode : ITreeNode {
+class AssemblyReferenceNode : MetadataNode {
 
-	public AssemblyReferenceNode (ICSharpCode.Decompiler.Metadata.AssemblyReference ar)
+	public AssemblyReferenceNode (ICSharpCode.Decompiler.Metadata.AssemblyReference ar, MetadataNode parent) : base (parent)
 	{
 		Tag = ar;
 		Text = "[R] " + ar.Name;
 	}
-
-	public string Text { get; set; }
-
-	public IList<ITreeNode> Children => Array.Empty<ITreeNode> ();
-
-	public object Tag { get; set; }
 }
 
-class ModuleReferenceNode : ITreeNode {
+class ModuleReferenceNode : MetadataNode {
 
-	public ModuleReferenceNode (string name, ModuleReference mr)
+	public ModuleReferenceNode (string name, ModuleReference mr, MetadataNode parent) : base (parent)
 	{
 		Tag = mr;
 		Text = "[r] " + name;
 	}
-
-	public string Text { get; set; }
-
-	public IList<ITreeNode> Children => Array.Empty<ITreeNode> ();
-
-	public object Tag { get; set; }
 }
 
-class NamespaceTreeNode : ITreeNode {
+class NamespaceNode : MetadataNode {
 
-	public NamespaceTreeNode (string fullname, string parent, IDecompilerTypeSystem typeSystem)
+	public NamespaceNode (string fullname, string parentName, IDecompilerTypeSystem typeSystem, MetadataNode parent) : base (parent)
 	{
 		Tag = fullname;
 		if (fullname.Length == 0)
@@ -106,24 +107,18 @@ class NamespaceTreeNode : ITreeNode {
 
 		List<ITreeNode> types = new ();
 		foreach (var type in typeSystem.GetTopLevelTypeDefinitions ().OrderBy (t => t.Name)) {
-			if (type.ParentModule.Name != parent)
+			if (type.ParentModule.Name != parentName)
 				continue;
 			if (type.Namespace == fullname)
-				types.Add (new TypeTreeNode (type, typeSystem));
+				types.Add (new TypeNode (type, typeSystem, this));
 		}
 		Children = types;
 	}
-
-	public string Text { get; set; }
-
-	public IList<ITreeNode> Children { get; private set; }
-
-	public object Tag { get; set; }
 }
 
-class TypeTreeNode : ITreeNode {
+class TypeNode : MetadataNode {
 
-	public TypeTreeNode (ITypeDefinition type, IDecompilerTypeSystem typeSystem)
+	public TypeNode (ITypeDefinition type, IDecompilerTypeSystem typeSystem, MetadataNode parent) : base (parent)
 	{
 		Text = "[T] " + type.Name;
 
@@ -134,13 +129,6 @@ class TypeTreeNode : ITreeNode {
 
 		List<ITreeNode> nodes = new ();
 
-		// var baseTypes = t.GetNonInterfaceBaseTypes().Where (b => b.DeclaringType != t).ToList();
-		// var b2 = t.GetAllBaseTypes ();
-		// var b3 = t.GetAllBaseTypeDefinitions ();
-
-		// var b4 = t.ParentModule.PEFile.Metadata.GetTypeDefinition (handle);
-		// var b5 = b4.BaseType;
-
 		foreach (var b in t.DirectBaseTypes.OrderBy (b => b.Name)) {
 			// if (type.MetadataToken == b.MetadataToken)
 			// 	continue;
@@ -148,44 +136,38 @@ class TypeTreeNode : ITreeNode {
 				var d = b.GetDefinition ();
 				if (d is null)
 					continue;
-				nodes.Add (new BaseTypeNode (d));
+				nodes.Add (new BaseTypeNode (d, this));
 			}
 		}
 		foreach (var n in t.NestedTypes.OrderBy (n => n.Name)) {
-			nodes.Add (new TypeTreeNode (n, typeSystem));
+			nodes.Add (new TypeNode (n, typeSystem, this));
 		}
 		foreach (var f in t.Fields.OrderBy (f => f.Name)) {
-			nodes.Add (new FieldNode (f));
+			nodes.Add (new FieldNode (f, this));
 		}
 		foreach (var e in t.Events.OrderBy (e => e.Name)) {
-			nodes.Add (new EventNode (e));
+			nodes.Add (new EventNode (e, this));
 		}
 		foreach (var p in t.Properties.OrderBy (p => p.Name)) {
-			nodes.Add (new PropertyNode (p));
+			nodes.Add (new PropertyNode (p, this));
 		}
 		foreach (var m in t.Methods.OrderBy (m => m.Name)) {
 			// e.g. some default .ctor on struct are present in the collection
 			if (m.MetadataToken.IsNil)
 				continue;
 			if (m.IsConstructor)
-				nodes.Add (new ConstructorNode (m));
+				nodes.Add (new ConstructorNode (m, this));
 			else
-				nodes.Add (new MethodNode (m));
+				nodes.Add (new MethodNode (m, this));
 		}
 
 		Children = nodes;
 	}
-
-	public string Text { get; set; }
-
-	public IList<ITreeNode> Children { get; private set; }
-
-	public object Tag { get; set; }
 }
 
-class BaseTypeNode : ITreeNode {
+class BaseTypeNode : MetadataNode {
 
-	public BaseTypeNode (ITypeDefinition type)
+	public BaseTypeNode (ITypeDefinition type, MetadataNode parent) : base (parent)
 	{
 		if (type.Kind == TypeKind.Interface)
 			Text = "[i] " + type.Name;
@@ -193,27 +175,18 @@ class BaseTypeNode : ITreeNode {
 			Text = "[b] " + type.Name;
 		Tag = type;
 	}
-
-	public string Text { get; set; }
-
-	public IList<ITreeNode> Children => Array.Empty<ITreeNode> ();
-
-	public object Tag { get; set; }
 }
 
-abstract class MemberNode : ITreeNode {
+abstract class MemberNode : MetadataNode {
 
 	protected abstract char InstanceCode { get; }
 	protected abstract char StaticCode { get; }
 
-#pragma warning disable 8618
-	protected MemberNode ()
+	protected MemberNode (MetadataNode parent) : base (parent)
 	{
-		// setting Text and Tag to non-null is a responsability to subclasses calling this .ctor
 	}
-#pragma warning restore 8618
 
-	protected MemberNode (IMember member)
+	protected MemberNode (IMember member, MetadataNode parent) : base (parent)
 	{
 		StringBuilder sb = new ("[");
 		if (member.IsStatic)
@@ -225,12 +198,6 @@ abstract class MemberNode : ITreeNode {
 		Text = sb.ToString ();
 		Tag = member;
 	}
-
-	public string Text { get; set; }
-
-	public IList<ITreeNode> Children => Array.Empty<ITreeNode> ();
-
-	public object Tag { get; set; }
 }
 
 class FieldNode : MemberNode {
@@ -238,7 +205,7 @@ class FieldNode : MemberNode {
 
 	protected override char StaticCode => 'F';
 
-	public FieldNode (IField field) : base (field)
+	public FieldNode (IField field, MetadataNode parent) : base (field, parent)
 	{
 	}
 }
@@ -248,7 +215,7 @@ class EventNode : MemberNode {
 
 	protected override char StaticCode => 'E';
 
-	public EventNode (IEvent @event) : base (@event)
+	public EventNode (IEvent @event, MetadataNode parent) : base (@event, parent)
 	{
 	}
 }
@@ -258,7 +225,7 @@ class PropertyNode : MemberNode {
 
 	protected override char StaticCode => 'P';
 
-	public PropertyNode (IProperty property) : base (property)
+	public PropertyNode (IProperty property, MetadataNode parent) : base (property, parent)
 	{
 	}
 }
@@ -268,7 +235,7 @@ class MethodNode : MemberNode {
 
 	protected override char StaticCode => 'M';
 
-	public MethodNode (IMethod method)
+	public MethodNode (IMethod method, MetadataNode parent) : base (parent)
 	{
 		StringBuilder sb = new ("[");
 		if (method.IsStatic)
@@ -295,7 +262,7 @@ class ConstructorNode : MemberNode {
 
 	protected override char StaticCode => 'C';
 
-	public ConstructorNode (IMethod method)
+	public ConstructorNode (IMethod method, MetadataNode parent) : base (parent)
 	{
 		StringBuilder sb = new ("[");
 		if (method.IsStatic)
