@@ -1,5 +1,6 @@
 using System.Reflection.Metadata;
 using System.Text;
+
 using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.Decompiler.TypeSystem;
 using Terminal.Gui.Trees;
@@ -242,16 +243,7 @@ class MethodNode : MemberNode {
 			sb.Append (StaticCode);
 		else
 			sb.Append (InstanceCode);
-		sb.Append ("] ").Append (method.Name);
-		sb.Append ('(');
-		if (method.Parameters.Count > 0) {
-			foreach (var p in method.Parameters) {
-				sb.AppendType (p.Type).Append (',');
-			}
-			sb.Length--;
-		}
-		sb.Append (')');
-		sb.Append (" : ").AppendType (method.ReturnType);
+		sb.Append ("] ").AppendMethod (method);
 		Text = sb.ToString ();
 		Tag = method;
 	}

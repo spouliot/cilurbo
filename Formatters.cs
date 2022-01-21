@@ -71,4 +71,17 @@ static class Formatters {
 		}
 		return self.Append (type.Name);
 	}
+
+	static public StringBuilder AppendMethod (this StringBuilder self, IMethod method)
+	{
+		self.Append (method.Name);
+		self.Append ('(');
+		if (method.Parameters.Count > 0) {
+			foreach (var p in method.Parameters) {
+				self.AppendType (p.Type).Append (',');
+			}
+			self.Length--;
+		}
+		return self.Append (") : ").AppendType (method.ReturnType);
+	}
 }
