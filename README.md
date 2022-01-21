@@ -47,3 +47,4 @@
 * Add missing metadata tables
 * Add decompiler options / preferences
 * Add analysis tools
+* Add resources
