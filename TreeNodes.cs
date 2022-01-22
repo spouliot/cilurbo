@@ -121,7 +121,18 @@ class TypeNode : MetadataNode {
 
 	public TypeNode (ITypeDefinition type, IDecompilerTypeSystem typeSystem, MetadataNode parent) : base (parent)
 	{
-		Text = "[T] " + type.Name;
+		StringBuilder sb = new ("[T] ");
+		sb.Append (type.Name);
+		if (type.TypeParameterCount > 0) {
+			sb.Append ('<');
+			for (int i = 0; i < type.TypeParameterCount; i++) {
+				if (i > 0)
+					sb.Append (',');
+				sb.Append (type.TypeParameters [i].Name);
+			}
+			sb.Append ('>');
+		}
+		Text = sb.ToString ();
 
 		TypeDefinitionHandle handle = (TypeDefinitionHandle) type.MetadataToken;
 		if (typeSystem.MainModule.ResolveEntity (handle) is not ITypeDefinition t)
