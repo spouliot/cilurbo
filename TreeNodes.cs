@@ -126,9 +126,18 @@ class TypeNode : MetadataNode {
 		if (type.TypeParameterCount > 0) {
 			sb.Append ('<');
 			for (int i = 0; i < type.TypeParameterCount; i++) {
+				var p = type.TypeParameters [i];
 				if (i > 0)
-					sb.Append (',');
-				sb.Append (type.TypeParameters [i].Name);
+					sb.Append (", ");
+				switch (p.Variance) {
+				case VarianceModifier.Covariant:
+					sb.Append ("out ");
+				break;
+				case VarianceModifier.Contravariant:
+					sb.Append ("in ");
+				break;
+				}
+				sb.Append (p.Name);
 			}
 			sb.Append ('>');
 		}
