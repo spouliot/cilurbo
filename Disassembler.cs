@@ -35,9 +35,29 @@ static class Disassembler {
 			break;
 		case IProperty property:
 			rd.DisassembleProperty (pe, (PropertyDefinitionHandle) property.MetadataToken);
+			if (property.Getter is not null) {
+				output.WriteLine ();
+				rd.DisassembleMethod (pe, (MethodDefinitionHandle) property.Getter.MetadataToken);
+			}
+			if (property.Setter is not null) {
+				output.WriteLine ();
+				rd.DisassembleMethod (pe, (MethodDefinitionHandle) property.Setter.MetadataToken);
+			}
 			break;
 		case IEvent @event:
 			rd.DisassembleEvent (pe, (EventDefinitionHandle) @event.MetadataToken);
+			if (@event.AddAccessor is not null) {
+				output.WriteLine ();
+				rd.DisassembleMethod (pe, (MethodDefinitionHandle) @event.AddAccessor.MetadataToken);
+			}
+			if (@event.RemoveAccessor is not null) {
+				output.WriteLine ();
+				rd.DisassembleMethod (pe, (MethodDefinitionHandle) @event.RemoveAccessor.MetadataToken);
+			}
+			if (@event.InvokeAccessor is not null) {
+				output.WriteLine ();
+				rd.DisassembleMethod (pe, (MethodDefinitionHandle) @event.InvokeAccessor.MetadataToken);
+			}
 			break;
 		case IMethod method:
 			rd.DisassembleMethod (pe, (MethodDefinitionHandle) method.MetadataToken);
