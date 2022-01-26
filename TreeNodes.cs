@@ -5,6 +5,8 @@ using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.Decompiler.TypeSystem;
 using Terminal.Gui.Trees;
 
+namespace Cilurbo;
+
 abstract class MetadataNode : ITreeNode {
 
 	protected MetadataNode (MetadataNode? parent)
@@ -132,10 +134,10 @@ class TypeNode : MetadataNode {
 				switch (p.Variance) {
 				case VarianceModifier.Covariant:
 					sb.Append ("out ");
-				break;
+					break;
 				case VarianceModifier.Contravariant:
 					sb.Append ("in ");
-				break;
+					break;
 				}
 				sb.Append (p.Name);
 			}

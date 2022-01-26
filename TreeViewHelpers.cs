@@ -2,6 +2,8 @@ using ICSharpCode.Decompiler.Metadata;
 using Terminal.Gui;
 using Terminal.Gui.Trees;
 
+namespace Cilurbo;
+
 static class TreeViewHelpers {
 
 	public static AssemblyNode Add (this TreeView self, PEFile file)
@@ -29,6 +31,7 @@ static class TreeViewHelpers {
 			}
 			self.GoTo (result);
 			self.SelectedObject = result;
+			self.SetFocus ();
 		}
 		return result;
 	}

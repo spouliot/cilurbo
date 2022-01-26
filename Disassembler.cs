@@ -5,12 +5,14 @@ using ICSharpCode.Decompiler.Disassembler;
 using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.Decompiler.TypeSystem;
 
+namespace Cilurbo;
+
 static class Disassembler {
 
 	static public string Disassemble (this PEFile file)
 	{
-		using var writer = new StringWriter ();
-		var output = new PlainTextOutput (writer);
+		using StringWriter writer = new ();
+		PlainTextOutput output = new (writer);
 		ReflectionDisassembler rd = new (output, CancellationToken.None);
 		rd.WriteAssemblyHeader (file);
 		output.WriteLine ();
@@ -20,8 +22,8 @@ static class Disassembler {
 
 	static public string Disassemble (this IEntity entity)
 	{
-		using var writer = new StringWriter ();
-		var output = new PlainTextOutput (writer);
+		using StringWriter writer = new ();
+		PlainTextOutput output = new (writer);
 		ReflectionDisassembler rd = new (output, CancellationToken.None);
 		var pe = entity.ParentModule.PEFile!;
 		switch (entity) {

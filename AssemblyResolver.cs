@@ -1,5 +1,7 @@
 using ICSharpCode.Decompiler.Metadata;
 
+namespace Cilurbo;
+
 class AssemblyResolver : IAssemblyResolver {
 
 	static public readonly AssemblyResolver Resolver = new ();

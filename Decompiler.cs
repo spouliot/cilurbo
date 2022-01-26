@@ -3,6 +3,8 @@ using ICSharpCode.Decompiler.CSharp;
 using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.Decompiler.TypeSystem;
 
+namespace Cilurbo;
+
 static class Decompiler {
 
 	static readonly Dictionary<string, CSharpDecompiler> decompilers = new ();

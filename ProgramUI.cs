@@ -6,6 +6,8 @@ using ICSharpCode.Decompiler.TypeSystem;
 using Terminal.Gui;
 using Terminal.Gui.Trees;
 
+namespace Cilurbo;
+
 partial class Program {
 
 	static int sep = 40;
@@ -16,7 +18,6 @@ partial class Program {
 		Height = Dim.Fill (1),
 		CanFocus = true,
 		MultiSelect = false,
-		Shortcut = Key.F1,
 	};
 
 	static readonly TabView tabs = new () {
@@ -62,6 +63,7 @@ partial class Program {
 				new ("_Copy", "", EditCopy, null, null, Key.CtrlMask | Key.C),
 			}),
 			new ("_View", new MenuItem? [] {
+				new ("Assemblies Tree", "", ViewAssemblyTree, null, null, Key.F1),
 				new ("Disassembler View (IL)", "", ViewDisassembler, null, null, Key.F2),
 				new ("Decompiler View (C#)", "", ViewDecompiler, null, null, Key.F3),
 				new ("Metadata Tables", "", ViewMetadataTables, () => { return assemblies.SelectedObject is AssemblyNode; }, null, Key.F4),
@@ -107,7 +109,7 @@ partial class Program {
 						assemblies.SelectedObject = an;
 						assemblies.GoTo (an);
 					}
-					current_metadata = pe;
+					EnsureSourceView ().Show (pe);
 				}
 			}
 			break;
@@ -123,12 +125,11 @@ partial class Program {
 				}
 			}
 			if (f is not null)
-				current_metadata = f.Tag;
+				EnsureSourceView ().Show (f.Tag);
 			break;
 		default:
 			assemblies.Expand (node);
-			current_metadata = node.Tag;
-			ViewSource (Language);
+			EnsureSourceView ().Show (node.Tag);
 			assemblies.SetFocus ();
 			break;
 		}
@@ -204,14 +205,19 @@ partial class Program {
 			tv.Copy ();
 	}
 
+	static void ViewAssemblyTree ()
+	{
+		assemblies.SetFocus ();
+	}
+
 	static void ViewDisassembler ()
 	{
-		ViewSource (Languages.IL);
+		EnsureSourceView ().Language = Languages.IL;
 	}
 
 	static void ViewDecompiler ()
 	{
-		ViewSource (Languages.CSharp);
+		EnsureSourceView ().Language = Languages.CSharp;
 	}
 
 	static void ViewCollapseAllNodes ()
@@ -237,7 +243,7 @@ partial class Program {
 			Source = MetadataDataSource.Shared,
 		};
 
-		var table = new TableView () {
+		TableView table = new () {
 			X = Pos.Right (listview),
 			Y = 0,
 			Width = Dim.Fill (),
@@ -251,7 +257,7 @@ partial class Program {
 				if (e.Table.ExtendedProperties ["PE"] is not PEFile pe)
 					break;
 				var handle = MetadataTokens.AssemblyReferenceHandle ((int) e.Table.Rows [e.Row] [0]);
-				var ar = new AssemblyReference (pe.Metadata, handle);
+				AssemblyReference ar = new (pe.Metadata, handle);
 				var a = AssemblyResolver.Resolver.Resolve (ar);
 				if (a is not null) {
 					var an = assemblies.Select ((n) => a.Equals (n.Tag) && (n is AssemblyNode));
@@ -261,12 +267,12 @@ partial class Program {
 						assemblies.SetFocus ();
 					}
 				}
-				current_metadata = a;
+				EnsureSourceView ().Show (a);
 				break;
 			}
 		};
 
-		var v = new View () {
+		View v = new () {
 			X = 0,
 			Y = 0,
 			Width = Dim.Fill (),
@@ -355,69 +361,18 @@ partial class Program {
 		};
 	}
 
-	static readonly TabView.Tab source_tab = new ("", new TextView () {
-		X = 0,
-		Y = 0,
-		Width = Dim.Fill (),
-		Height = Dim.Fill (),
-		ReadOnly = true,
-	});
+	static readonly TabView.Tab source_tab = new ("", new SourceView ());
 
-	static TextView EnsureSourceView ()
+	static SourceView EnsureSourceView ()
 	{
 		if (tabs.Tabs.Contains (source_tab)) {
 			tabs.SelectedTab = source_tab;
-			return (source_tab.View as TextView)!;
+			return (source_tab.View as SourceView)!;
 		}
 
 		tabs.AddTab (source_tab, true);
 		tabs.SelectedTab = source_tab;
 
-		var textview = (source_tab.View as TextView)!;
-		var sbv = new ScrollBarView (textview, true);
-
-		sbv.ChangedPosition += () => {
-			textview.TopRow = sbv.Position;
-			if (textview.TopRow != sbv.Position) {
-				sbv.Position = textview.TopRow;
-			}
-			textview.SetNeedsDisplay ();
-		};
-
-		sbv.OtherScrollBarView.ChangedPosition += () => {
-			textview.LeftColumn = sbv.OtherScrollBarView.Position;
-			if (textview.LeftColumn != sbv.OtherScrollBarView.Position) {
-				sbv.OtherScrollBarView.Position = textview.LeftColumn;
-			}
-			textview.SetNeedsDisplay ();
-		};
-
-		sbv.VisibleChanged += () => {
-			if (sbv.Visible && textview.RightOffset == 0) {
-				textview.RightOffset = 1;
-			} else if (!sbv.Visible && textview.RightOffset == 1) {
-				textview.RightOffset = 0;
-			}
-		};
-
-		sbv.OtherScrollBarView.VisibleChanged += () => {
-			if (sbv.OtherScrollBarView.Visible && textview.BottomOffset == 0) {
-				textview.BottomOffset = 1;
-			} else if (!sbv.OtherScrollBarView.Visible && textview.BottomOffset == 1) {
-				textview.BottomOffset = 0;
-			}
-		};
-
-		textview.DrawContent += (e) => {
-			sbv.Size = textview.Lines;
-			sbv.Position = textview.TopRow;
-			if (sbv.OtherScrollBarView != null) {
-				sbv.OtherScrollBarView.Size = textview.Maxlength;
-				sbv.OtherScrollBarView.Position = textview.LeftColumn;
-			}
-			sbv.LayoutSubviews ();
-			sbv.Refresh ();
-		};
-		return textview;
+		return (source_tab.View as SourceView)!;
 	}
 }

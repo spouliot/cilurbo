@@ -8,6 +8,8 @@ using ICSharpCode.Decompiler.Metadata;
 
 using Terminal.Gui;
 
+namespace Cilurbo;
+
 class MetadataDataSource : IListDataSource {
 
 	public static readonly MetadataDataSource Shared = new ();

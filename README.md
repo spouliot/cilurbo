@@ -1,11 +1,15 @@
 ![screenshot](cilurbo.png)
 
+This is a proof-of-concept for implementing several ideas I have to investigate .net assemblies, largely around how good (or bad) IL linking is for applications. The basic parts, disassembler and decompiler, are useful by themselves for many other purposes.
+
+As long as this remains a proof-of-concept (before 1.0) expect many breaking changes.
+
 ## Goals
 
 * Complete: disassembler, decompiler, metadata tables...
 * Keyboard driven
 * Easy to build, extend and update (to latest [ICSharpCode.Decompiler](https://github.com/icsharpcode/ILSpy/tree/master/ICSharpCode.Decompiler) versions)
-* Cross platform
+* Cross platform (at least macOS and Linux)
 
 ## Metadata codes
 

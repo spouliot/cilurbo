@@ -2,6 +2,8 @@ using System.Text;
 
 using ICSharpCode.Decompiler.TypeSystem;
 
+namespace Cilurbo;
+
 static class Formatters {
 
 	static readonly Dictionary<string, string> wellKnownTypeNames = new ();
