@@ -6,6 +6,8 @@ using ICSharpCode.Decompiler.TypeSystem;
 using Terminal.Gui;
 using Terminal.Gui.Trees;
 
+using Cilurbo.Services;
+
 namespace Cilurbo;
 
 partial class Program {
@@ -76,6 +78,7 @@ partial class Program {
 				new ("_Preferences...", "", ViewPreferences, null, null, Key.F5),
 			}),
 			new ("_Help", new MenuItem [] {
+				new ("Key Bindings...", "", HelpKeyBindings),
 				new ("About...", "", HelpAbout),
 			}),
 		});
@@ -307,6 +310,11 @@ partial class Program {
 	static void ViewPreferences ()
 	{
 		MessageBox.Query ("Preferences", "TODO", "_Ok");
+	}
+
+	static void HelpKeyBindings ()
+	{
+		ExecSupport.Run ("open https://github.com/spouliot/cilurbo/wiki/KeyBindings");
 	}
 
 	static void HelpAbout ()
