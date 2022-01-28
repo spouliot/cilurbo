@@ -41,8 +41,8 @@ partial class Program {
 		if (assemblies_file_extensions.Contains (ext)) {
 			var pe = AssemblyResolver.Resolver.Load (file);
 			if (pe is not null) {
-				var node = assemblies.Add (pe);
-				assemblies.SelectedObject = node;
+				var node = metadata_tree.Add (pe);
+				metadata_tree.SelectedObject = node;
 			}
 		} else if (lists_file_extensions.Contains (ext)) {
 			foreach (var f in File.ReadLines (file)) {

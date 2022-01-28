@@ -13,7 +13,7 @@ namespace Cilurbo;
 partial class Program {
 
 	static int sep = 40;
-	static readonly TreeView assemblies = new () {
+	static readonly TreeView metadata_tree = new () {
 		X = 0,
 		Y = 2,
 		Width = sep,
@@ -47,17 +47,17 @@ partial class Program {
 			new (Key.Null, "...", null),
 		});
 
-		assemblies.SelectionChanged += (sender, e) => {
+		metadata_tree.SelectionChanged += (sender, e) => {
 			statusBar.Items [1].Title = e.NewValue.Text;
 		};
 
-		assemblies.ObjectActivated += ObjectActivated;
+		metadata_tree.ObjectActivated += ObjectActivated;
 
 		MenuBar menu = new (new MenuBarItem [] {
 			new ("_File", new MenuItem? [] {
 				new ("_Open...", "", FileOpen, null, null, Key.CtrlMask | Key.O),
-				new ("Open _List...", "", FileOpenList, null, null, Key.CtrlMask | Key.R),
-				new ("_Save List...", "", FileSaveList, () => { return assemblies.Objects.Any (); }, null, Key.CtrlMask | Key.S),
+				new ("Open Assembly List...", "", FileOpenList, null, null, Key.CtrlMask | Key.R),
+				new ("_Save Assembly List...", "", FileSaveList, () => { return metadata_tree.Objects.Any (); }, null, Key.CtrlMask | Key.S),
 				null,
 				new ("_Quit", "", FileQuit, null, null, Key.CtrlMask | Key.Q),
 			}),
@@ -65,15 +65,15 @@ partial class Program {
 				new ("_Copy", "", EditCopy, null, null, Key.CtrlMask | Key.C),
 			}),
 			new ("_View", new MenuItem? [] {
-				new ("Assemblies Tree", "", ViewAssemblyTree, null, null, Key.F1),
+				new ("Metadata Tree", "", ViewMetadataTree, null, null, Key.F1),
 				new ("Disassembler View (IL)", "", ViewDisassembler, null, null, Key.F2),
 				new ("Decompiler View (C#)", "", ViewDecompiler, null, null, Key.F3),
-				new ("Metadata Tables", "", ViewMetadataTables, () => { return assemblies.SelectedObject is AssemblyNode; }, null, Key.F4),
+				new ("Metadata Tables", "", ViewMetadataTables, () => { return metadata_tree.SelectedObject is AssemblyNode; }, null, Key.F4),
 				null,
-				new ("Collapse all tree nodes", "", ViewCollapseAllNodes, null, null, Key.CtrlMask | Key.U),
+				new ("Collapse All Nodes", "", ViewCollapseAllNodes, null, null, Key.CtrlMask | Key.U),
 				null,
-				new ("Enlarge TreeView", "", EnlargeTreeView, null, null, Key.ShiftMask | Key.CursorRight),
-				new ("Reduce TreeView", "", ReduceTreeView, null, null, Key.ShiftMask | Key.CursorLeft),
+				new ("Enlarge Metadata Tree", "", EnlargeTreeView, null, null, Key.ShiftMask | Key.CursorRight),
+				new ("Reduce Metadata Tree", "", ReduceTreeView, null, null, Key.ShiftMask | Key.CursorLeft),
 				null,
 				new ("_Preferences...", "", ViewPreferences, null, null, Key.F5),
 			}),
@@ -92,7 +92,7 @@ partial class Program {
 			CanFocus = false,
 		};
 
-		top.Add (label, assemblies, tabs, statusBar);
+		top.Add (label, metadata_tree, tabs, statusBar);
 		top.ColorScheme = Colors.Base;
 		SetupScrollBar (); // superview won't be null here
 		return 0;
@@ -106,34 +106,34 @@ partial class Program {
 			if (arn.Tag is AssemblyReference ar) {
 				var pe = AssemblyResolver.Resolver.Resolve (ar);
 				if (pe is not null) {
-					var a = assemblies.Select ((n) => pe.Equals (n.Tag) && (n is AssemblyNode));
+					var a = metadata_tree.Select ((n) => pe.Equals (n.Tag) && (n is AssemblyNode));
 					if (a is null) {
-						var an = assemblies.Add (pe);
-						assemblies.SelectedObject = an;
-						assemblies.GoTo (an);
+						var an = metadata_tree.Add (pe);
+						metadata_tree.SelectedObject = an;
+						metadata_tree.GoTo (an);
 					}
 					EnsureSourceView ().Show (pe);
 				}
 			}
 			break;
 		case BaseTypeNode btn:
-			var f = assemblies.Select ((n) => btn.Tag.Equals (n.Tag) && (n is TypeNode));
+			var f = metadata_tree.Select ((n) => btn.Tag.Equals (n.Tag) && (n is TypeNode));
 			// it might not be loaded yet (or not found)
 			if (f is null) {
 				var pe = (btn.Tag as ITypeDefinition)!.ParentModule.PEFile;
 				if (pe is not null) {
-					assemblies.Add (pe);
+					metadata_tree.Add (pe);
 					// try again with the assembly loaded
-					f = assemblies.Select ((n) => btn.Tag.Equals (n.Tag) && (n is TypeNode));
+					f = metadata_tree.Select ((n) => btn.Tag.Equals (n.Tag) && (n is TypeNode));
 				}
 			}
 			if (f is not null)
 				EnsureSourceView ().Show (f.Tag);
 			break;
 		default:
-			assemblies.Expand (node);
+			metadata_tree.Expand (node);
 			EnsureSourceView ().Show (node.Tag);
-			assemblies.SetFocus ();
+			metadata_tree.SetFocus ();
 			break;
 		}
 	}
@@ -146,7 +146,7 @@ partial class Program {
 		var p = tabs.X + 1;
 		tabs.X = p;
 		tabs.Width = Dim.Fill ();
-		assemblies.Width += 1;
+		metadata_tree.Width += 1;
 	}
 
 	static void ReduceTreeView ()
@@ -156,7 +156,7 @@ partial class Program {
 		sep--;
 		tabs.X -= 1;
 		tabs.Width = Dim.Fill ();
-		assemblies.Width -= 1;
+		metadata_tree.Width -= 1;
 	}
 
 	static void FileOpen ()
@@ -188,7 +188,7 @@ partial class Program {
 		Application.Run (d);
 		if (!d.Canceled && (d.FilePath is not null)) {
 			StringBuilder list = new ();
-			foreach (var node in assemblies.Objects) {
+			foreach (var node in metadata_tree.Objects) {
 				if (node.Tag is PEFile pe) {
 					list.AppendLine (pe.FileName);
 				}
@@ -208,9 +208,9 @@ partial class Program {
 			tv.Copy ();
 	}
 
-	static void ViewAssemblyTree ()
+	static void ViewMetadataTree ()
 	{
-		assemblies.SetFocus ();
+		metadata_tree.SetFocus ();
 	}
 
 	static void ViewDisassembler ()
@@ -225,8 +225,8 @@ partial class Program {
 
 	static void ViewCollapseAllNodes ()
 	{
-		assemblies.CollapseAll ();
-		assemblies.SetFocus ();
+		metadata_tree.CollapseAll ();
+		metadata_tree.SetFocus ();
 	}
 
 	static readonly Dictionary<PEFile, TabView.Tab> metadata_tables_tabs = new ();
@@ -263,11 +263,11 @@ partial class Program {
 				AssemblyReference ar = new (pe.Metadata, handle);
 				var a = AssemblyResolver.Resolver.Resolve (ar);
 				if (a is not null) {
-					var an = assemblies.Select ((n) => a.Equals (n.Tag) && (n is AssemblyNode));
+					var an = metadata_tree.Select ((n) => a.Equals (n.Tag) && (n is AssemblyNode));
 					if (an is null) {
-						an = assemblies.Add (a);
-						assemblies.SelectedObject = an;
-						assemblies.SetFocus ();
+						an = metadata_tree.Add (a);
+						metadata_tree.SelectedObject = an;
+						metadata_tree.SetFocus ();
 					}
 				}
 				EnsureSourceView ().Show (a);
@@ -299,7 +299,7 @@ partial class Program {
 	static void ViewMetadataTables ()
 	{
 		// menu is disabled (same condition) but this gets called anyway if the (menu) shortcut is used
-		if (assemblies.SelectedObject.Tag is not PEFile pe)
+		if (metadata_tree.SelectedObject.Tag is not PEFile pe)
 			return;
 
 		var tab = GetMetadataTab (pe);
@@ -339,32 +339,32 @@ partial class Program {
 	static void SetupScrollBar ()
 	{
 		// When using scroll bar leave the last row of the control free (for over-rendering with scroll bar)
-		assemblies.Style.LeaveLastRow = true;
+		metadata_tree.Style.LeaveLastRow = true;
 
-		ScrollBarView _scrollBar = new (assemblies, true);
+		ScrollBarView _scrollBar = new (metadata_tree, true);
 		_scrollBar.ShowScrollIndicator = true;
 
 		_scrollBar.ChangedPosition += () => {
-			assemblies.ScrollOffsetVertical = _scrollBar.Position;
-			if (assemblies.ScrollOffsetVertical != _scrollBar.Position) {
-				_scrollBar.Position = assemblies.ScrollOffsetVertical;
+			metadata_tree.ScrollOffsetVertical = _scrollBar.Position;
+			if (metadata_tree.ScrollOffsetVertical != _scrollBar.Position) {
+				_scrollBar.Position = metadata_tree.ScrollOffsetVertical;
 			}
-			assemblies.SetNeedsDisplay ();
+			metadata_tree.SetNeedsDisplay ();
 		};
 
 		_scrollBar.OtherScrollBarView.ChangedPosition += () => {
-			assemblies.ScrollOffsetHorizontal = _scrollBar.OtherScrollBarView.Position;
-			if (assemblies.ScrollOffsetHorizontal != _scrollBar.OtherScrollBarView.Position) {
-				_scrollBar.OtherScrollBarView.Position = assemblies.ScrollOffsetHorizontal;
+			metadata_tree.ScrollOffsetHorizontal = _scrollBar.OtherScrollBarView.Position;
+			if (metadata_tree.ScrollOffsetHorizontal != _scrollBar.OtherScrollBarView.Position) {
+				_scrollBar.OtherScrollBarView.Position = metadata_tree.ScrollOffsetHorizontal;
 			}
-			assemblies.SetNeedsDisplay ();
+			metadata_tree.SetNeedsDisplay ();
 		};
 
-		assemblies.DrawContent += (e) => {
-			_scrollBar.Size = assemblies.ContentHeight;
-			_scrollBar.Position = assemblies.ScrollOffsetVertical;
-			_scrollBar.OtherScrollBarView.Size = assemblies.GetContentWidth (true);
-			_scrollBar.OtherScrollBarView.Position = assemblies.ScrollOffsetHorizontal;
+		metadata_tree.DrawContent += (e) => {
+			_scrollBar.Size = metadata_tree.ContentHeight;
+			_scrollBar.Position = metadata_tree.ScrollOffsetVertical;
+			_scrollBar.OtherScrollBarView.Size = metadata_tree.GetContentWidth (true);
+			_scrollBar.OtherScrollBarView.Position = metadata_tree.ScrollOffsetHorizontal;
 			_scrollBar.Refresh ();
 		};
 	}
