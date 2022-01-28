@@ -53,6 +53,15 @@ partial class Program {
 
 		metadata_tree.ObjectActivated += ObjectActivated;
 
+		metadata_tree.KeyPress += (e) => {
+			if (e.KeyEvent.Key == (Key.CtrlMask | Key.D)) {
+				if (metadata_tree.HasFocus) {
+					DashSupport.Open (metadata_tree.SelectedObject);
+					e.Handled = true;
+				}
+			}
+		};
+
 		MenuBar menu = new (new MenuBarItem [] {
 			new ("_File", new MenuItem? [] {
 				new ("_Open...", "", FileOpen, null, null, Key.CtrlMask | Key.O),
