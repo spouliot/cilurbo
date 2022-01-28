@@ -202,7 +202,7 @@ partial class Program {
 					list.AppendLine (pe.FileName);
 				}
 			}
-			File.AppendAllText (d.FilePath.ToString ()!, list.ToString ());
+			File.WriteAllText (d.FilePath.ToString ()!, list.ToString ());
 		}
 	}
 
