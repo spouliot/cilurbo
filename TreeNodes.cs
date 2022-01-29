@@ -7,7 +7,7 @@ using Terminal.Gui.Trees;
 
 namespace Cilurbo;
 
-abstract class MetadataNode : ITreeNode {
+public abstract class MetadataNode : ITreeNode {
 
 	protected MetadataNode (MetadataNode? parent)
 	{
@@ -25,7 +25,7 @@ abstract class MetadataNode : ITreeNode {
 	public object Tag { get; set; }
 }
 
-class AssemblyNode : MetadataNode {
+public class AssemblyNode : MetadataNode {
 	public AssemblyNode (PEFile file) : base (null)
 	{
 		Tag = file;
@@ -80,7 +80,7 @@ class AssemblyNode : MetadataNode {
 	public DecompilerTypeSystem TypeSystem { get; private set; }
 }
 
-class AssemblyReferenceNode : MetadataNode {
+public class AssemblyReferenceNode : MetadataNode {
 
 	public AssemblyReferenceNode (ICSharpCode.Decompiler.Metadata.AssemblyReference ar, MetadataNode parent) : base (parent)
 	{
@@ -89,7 +89,7 @@ class AssemblyReferenceNode : MetadataNode {
 	}
 }
 
-class ModuleReferenceNode : MetadataNode {
+public class ModuleReferenceNode : MetadataNode {
 
 	public ModuleReferenceNode (string name, ModuleReference mr, MetadataNode parent) : base (parent)
 	{
@@ -98,7 +98,7 @@ class ModuleReferenceNode : MetadataNode {
 	}
 }
 
-class NamespaceNode : MetadataNode {
+public class NamespaceNode : MetadataNode {
 
 	public NamespaceNode (string fullname, string parentName, IDecompilerTypeSystem typeSystem, MetadataNode parent) : base (parent)
 	{
@@ -119,7 +119,7 @@ class NamespaceNode : MetadataNode {
 	}
 }
 
-class TypeNode : MetadataNode {
+public class TypeNode : MetadataNode {
 
 	public TypeNode (ITypeDefinition type, IDecompilerTypeSystem typeSystem, MetadataNode parent) : base (parent)
 	{
@@ -188,7 +188,7 @@ class TypeNode : MetadataNode {
 	}
 }
 
-class BaseTypeNode : MetadataNode {
+public class BaseTypeNode : MetadataNode {
 
 	public BaseTypeNode (ITypeDefinition type, MetadataNode parent) : base (parent)
 	{
@@ -200,7 +200,7 @@ class BaseTypeNode : MetadataNode {
 	}
 }
 
-abstract class MemberNode : MetadataNode {
+public abstract class MemberNode : MetadataNode {
 
 	protected abstract char InstanceCode { get; }
 	protected abstract char StaticCode { get; }
@@ -223,7 +223,7 @@ abstract class MemberNode : MetadataNode {
 	}
 }
 
-class FieldNode : MemberNode {
+public class FieldNode : MemberNode {
 	protected override char InstanceCode => 'f';
 
 	protected override char StaticCode => 'F';
@@ -233,7 +233,7 @@ class FieldNode : MemberNode {
 	}
 }
 
-class EventNode : MemberNode {
+public class EventNode : MemberNode {
 	protected override char InstanceCode => 'e';
 
 	protected override char StaticCode => 'E';
@@ -243,7 +243,7 @@ class EventNode : MemberNode {
 	}
 }
 
-class PropertyNode : MemberNode {
+public class PropertyNode : MemberNode {
 	protected override char InstanceCode => 'p';
 
 	protected override char StaticCode => 'P';
@@ -253,7 +253,7 @@ class PropertyNode : MemberNode {
 	}
 }
 
-class MethodNode : MemberNode {
+public class MethodNode : MemberNode {
 	protected override char InstanceCode => 'm';
 
 	protected override char StaticCode => 'M';
@@ -271,7 +271,7 @@ class MethodNode : MemberNode {
 	}
 }
 
-class ConstructorNode : MemberNode {
+public class ConstructorNode : MemberNode {
 	protected override char InstanceCode => 'c';
 
 	protected override char StaticCode => 'C';
