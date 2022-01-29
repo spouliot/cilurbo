@@ -6,6 +6,7 @@ using ICSharpCode.Decompiler.TypeSystem;
 using Terminal.Gui;
 using Terminal.Gui.Trees;
 
+using Cilurbo.Analyzers;
 using Cilurbo.Services;
 
 namespace Cilurbo;
@@ -86,6 +87,7 @@ partial class Program {
 				null,
 				new ("_Preferences...", "", ViewPreferences, null, null, Key.F5),
 			}),
+			new ("_Analyzers", AnalyzersManager.BuildMenu ()),
 			new ("_Help", new MenuItem [] {
 				new ("Key Bindings...", "", HelpKeyBindings),
 				new ("About...", "", HelpAbout),
@@ -145,6 +147,23 @@ partial class Program {
 			metadata_tree.SetFocus ();
 			break;
 		}
+	}
+
+	public static MetadataNode? SelectedNode => metadata_tree.SelectedObject as MetadataNode;
+
+	public static MetadataNode? Select (Predicate<ITreeNode> predicate)
+	{
+		return (MetadataNode?) metadata_tree.Select (predicate);
+	}
+
+	public static void AddTab (TabView.Tab tab, bool andSelect = true)
+	{
+		tabs.AddTab (tab, andSelect);
+	}
+
+	public static void SelectTab (TabView.Tab tab)
+	{
+		tabs.SelectedTab = tab;
 	}
 
 	static void EnlargeTreeView ()

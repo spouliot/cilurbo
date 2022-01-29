@@ -20,6 +20,8 @@ As long as this remains a proof-of-concept (before 1.0) expect many breaking cha
     * Source code: [C#](https://gist.github.com/spouliot/7f212838bba691181c6153b3e51e2d54) and [IL](https://gist.github.com/spouliot/d04409250cf7b9549000f07523efc6f4)
     * Metadata tables
 * [Dash support](https://github.com/spouliot/cilurbo/wiki/Dash) : quickly open documentation for the selected item
+* Analyzers
+    * [P/Invoke Finder](https://github.com/spouliot/cilurbo/wiki/AnalyzerPInvokeFinder)
 
 ## TODO
 
