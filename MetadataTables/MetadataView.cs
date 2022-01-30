@@ -5,11 +5,11 @@ using Terminal.Gui;
 
 namespace Cilurbo.MetadataTables;
 
-public class MetadataTableView : View {
+public class MetadataView : View {
 	readonly Label assembly_label;
 	readonly ListView listview;
 
-	public MetadataTableView ()
+	public MetadataView ()
 	{
 		Width = Dim.Fill ();
 		Height = Dim.Fill ();

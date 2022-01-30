@@ -349,14 +349,14 @@ partial class Program {
 		return (source_tab.View as SourceView)!;
 	}
 
-	static readonly TabView.Tab metadata_tab = new ("Metadata", new MetadataTableView ());
+	static readonly TabView.Tab metadata_tab = new ("Metadata", new MetadataView ());
 
-	public static MetadataTableView EnsureMetadataTableView ()
+	public static MetadataView EnsureMetadataTableView ()
 	{
 		if (!tabs.Tabs.Contains (metadata_tab)) {
 			tabs.SelectedTab = metadata_tab;
 		}
 		tabs.SelectedTab = metadata_tab;
-		return (metadata_tab.View as MetadataTableView)!;
+		return (metadata_tab.View as MetadataView)!;
 	}
 }

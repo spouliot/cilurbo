@@ -12,7 +12,7 @@ class MetadataTable {
 	protected static string GetBlob (MetadataReader metadata, BlobHandle blob)
 	{
 		StringBuilder sb = new ();
-		sb.Append ("[blob: ").Append (metadata.GetHeapOffset (blob)).Append ("] ");
+		// sb.Append ("[blob: ").Append (metadata.GetHeapOffset (blob)).Append ("] ");
 		if (blob.IsNil) {
 			sb.Append ("nil");
 		} else {
