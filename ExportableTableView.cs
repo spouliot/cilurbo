@@ -6,7 +6,7 @@ namespace Cilurbo;
 
 class ExportableTableView : TableView {
 
-	protected ExportableTableView ()
+	public ExportableTableView ()
 	{
 	}
 

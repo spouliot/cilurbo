@@ -264,9 +264,16 @@ partial class Program {
 		if (metadata_tables_tabs.TryGetValue (pe, out var tab))
 			return tab;
 
+		Label assembly_label = new () {
+			Text = $"Assembly: {pe.FullName}",
+		};
+		Label table_label = new () {
+			Y = 1,
+			Text = "Tables:",
+		};
 		ListView listview = new () {
 			X = 0,
-			Y = 0,
+			Y = 2,
 			Width = MetadataDataSource.Shared.Length + 1,
 			Height = Dim.Fill (),
 			AllowsMultipleSelection = false,
@@ -274,14 +281,15 @@ partial class Program {
 			Source = MetadataDataSource.Shared,
 		};
 
-		TableView table = new () {
+		ExportableTableView table = new () {
 			X = Pos.Right (listview),
-			Y = 0,
+			Y = 1,
 			Width = Dim.Fill (),
 			Height = Dim.Fill (),
 			CanFocus = true,
 			FullRowSelect = true,
 		};
+		table.Style.AlwaysShowHeaders = true;
 		table.CellActivated += (e) => {
 			switch (e.Table.ExtendedProperties ["Metadata"]) {
 			case MetadataTables.AssemblyRef:
@@ -310,7 +318,7 @@ partial class Program {
 			Height = Dim.Fill (),
 			CanFocus = false,
 		};
-		v.Add (listview, table);
+		v.Add (assembly_label, table_label, listview, table);
 
 		listview.OpenSelectedItem += (args) => {
 			var table_name = listview.Source.ToList () [listview.SelectedItem] as string;
@@ -318,7 +326,7 @@ partial class Program {
 			table.SetFocus ();
 		};
 
-		tab = new TabView.Tab ($"{pe.Name} Metadata", v);
+		tab = new TabView.Tab ("Metadata", v);
 		tabs.AddTab (tab, true);
 		metadata_tables_tabs.Add (pe, tab);
 		return tab;

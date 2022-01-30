@@ -15,9 +15,11 @@ class MetadataDataSource : IListDataSource {
 	public static readonly MetadataDataSource Shared = new ();
 
 	static readonly List<string> tables = new () {
+		MetadataTables.TypeRef,
 		MetadataTables.MethodDef,
 		MetadataTables.MemberRef,
 		MetadataTables.Constant,
+		MetadataTables.ModuleRef,
 		MetadataTables.AssemblyRef,
 	};
 
@@ -45,9 +47,9 @@ class MetadataTables {
 	{
 		StringBuilder sb = new ();
 		sb.Append ("[blob: ").Append (metadata.GetHeapOffset (blob)).Append ("] ");
-		if (blob.IsNil)
+		if (blob.IsNil) {
 			sb.Append ("nil");
-		else {
+		} else {
 			foreach (var b in metadata.GetBlobContent (blob)) {
 				sb.Append (b.ToString ("x2"));
 			}
@@ -84,24 +86,31 @@ class MetadataTables {
 
 	protected static string GetString (MetadataReader metadata, StringHandle handle)
 	{
+#if false
 		StringBuilder sb = new ();
 		sb.Append ("[heap: ").Append (MetadataTokens.GetHeapOffset (handle)).Append ("] ");
 		sb.Append (metadata.GetString (handle));
 		return sb.ToString ();
+#endif
+		return metadata.GetString (handle);
 	}
 
-	//   							   1234567890123456
+	//   						   1234567890123456
+	public const string TypeRef = "0x01 TypeRef";
 	public const string MethodDef = "0x06 MethodDef";
 	public const string MemberRef = "0x0A MemberRef";
 	public const string Constant = "0x0B Constant";
+	public const string ModuleRef = "0x1A ModuleRef";
 	public const string AssemblyRef = "0x23 AssemblyRef";
 
 	public static DataTable GetTable (string tableName, PEFile module)
 	{
 		return tableName switch {
+			TypeRef => GetTypeRefTable (module),
 			MethodDef => GetMethodDefTable (module),
 			MemberRef => GetMemberRefTable (module),
 			Constant => GetConstantTable (module),
+			ModuleRef => GetModuleRefTable (module),
 			AssemblyRef => GetAssemblyRefTable (module),
 			_ => throw new NotImplementedException (),
 		};
@@ -113,6 +122,44 @@ class MetadataTables {
 		dt.ExtendedProperties.Add ("PE", module);
 		dt.ExtendedProperties.Add ("Metadata", tableName);
 		dt.Columns.Add (new DataColumn ("RID", typeof (int)));
+		return dt;
+	}
+
+	// 0x01 TypeRef
+	// https://github.com/stakx/ecma-335/blob/master/docs/ii.22.38-typeref-0x01.md
+	static DataTable GetTypeRefTable (PEFile module)
+	{
+		DataTable dt = CreateTable (module, TypeRef);
+		dt.Columns.Add (new DataColumn ("Token", typeof (string)));
+		dt.Columns.Add (new DataColumn ("ResolutionScope", typeof (string)));
+		dt.Columns.Add (new DataColumn ("TypeName", typeof (string)));
+		dt.Columns.Add (new DataColumn ("TypeNamespace", typeof (string)));
+
+		StringBuilder rst_value = new ();
+		var m = module.Metadata;
+		foreach (var row in m.TypeReferences) {
+			var tref = m.GetTypeReference (row);
+			var rst = MetadataTokens.GetToken (tref.ResolutionScope);
+			rst_value.Append ("0x").Append (rst.ToString ("x8"));
+			if ((rst & 0x23000000) == 0x23000000) {
+				var aref = m.GetAssemblyReference ((AssemblyReferenceHandle) tref.ResolutionScope);
+				rst_value.Append (' ').Append (GetString (m, aref.Name));
+			} else if ((rst & 0x01000000) == 0x01000000) {
+				var ntref = m.GetTypeReference ((TypeReferenceHandle) tref.ResolutionScope);
+				rst_value.Append (' ').Append (GetString (m, ntref.Name));
+			} else {
+				// TODO expand resolution scope - it can be many things
+				System.Diagnostics.Debugger.Break ();
+			}
+			dt.Rows.Add (new object [] {
+				MetadataTokens.GetRowNumber (row),
+				MetadataTokens.GetToken (row).ToString ("x8"),
+				rst_value.ToString (),
+				GetString (m, tref.Name),
+				GetString (m, tref.Namespace),
+			});
+			rst_value.Clear ();
+		}
 		return dt;
 	}
 
@@ -211,7 +258,7 @@ class MetadataTables {
 		dt.Columns.Add (new DataColumn ("Value", typeof (string)));
 
 		var m = module.Metadata;
-		for (var row = 1; row < m.GetTableRowCount (TableIndex.Constant); row++) {
+		for (var row = 1; row <= m.GetTableRowCount (TableIndex.Constant); row++) {
 			var handle = MetadataTokens.ConstantHandle (row);
 			var c = m.GetConstant (handle);
 			dt.Rows.Add (new object [] {
@@ -220,6 +267,27 @@ class MetadataTables {
 				GetEnum (c.TypeCode),
 				MetadataTokens.GetToken (c.Parent).ToString ("x8"),
 				GetBlob (m, c.Value),
+			});
+		}
+		return dt;
+	}
+
+	// 0x1A ModuleRef
+	// https://github.com/stakx/ecma-335/blob/master/docs/ii.22.31-moduleref-0x1a.md
+	static DataTable GetModuleRefTable (PEFile module)
+	{
+		DataTable dt = CreateTable (module, Constant);
+		dt.Columns.Add (new DataColumn ("Token", typeof (string)));
+		dt.Columns.Add (new DataColumn ("Name", typeof (string)));
+
+		var m = module.Metadata;
+		for (var row = 1; row <= m.GetTableRowCount (TableIndex.ModuleRef); row++) {
+			var handle = MetadataTokens.ModuleReferenceHandle (row);
+			var mref = m.GetModuleReference (handle);
+			dt.Rows.Add (new object [] {
+				row,
+				MetadataTokens.GetToken (handle).ToString ("x8"),
+				GetString (m, mref.Name),
 			});
 		}
 		return dt;
