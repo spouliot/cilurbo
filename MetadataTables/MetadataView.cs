@@ -9,6 +9,8 @@ public class MetadataView : View {
 	readonly Label assembly_label;
 	readonly ListView listview;
 
+	readonly MetadataTableView table;
+
 	public MetadataView ()
 	{
 		Width = Dim.Fill ();
@@ -31,8 +33,7 @@ public class MetadataView : View {
 			CanFocus = true,
 			Source = MetadataDataSource.Shared,
 		};
-
-		MetadataTableView table = new () {
+		table = new () {
 			X = Pos.Right (listview),
 			Y = 1,
 		};
@@ -58,6 +59,7 @@ public class MetadataView : View {
 			pefile = value;
 			if (pefile is not null) {
 				assembly_label.Text = $"Assembly: {pefile.FullName}";
+				table.Table = null;
 				listview.SelectedItem = 0;
 				listview.SetFocus ();
 			} else {

@@ -242,7 +242,7 @@ class MetadataTable {
 	// https://github.com/stakx/ecma-335/blob/master/docs/ii.22.31-moduleref-0x1a.md
 	static DataTable GetModuleRefTable (PEFile module)
 	{
-		DataTable dt = CreateTable (module, Constant);
+		DataTable dt = CreateTable (module, ModuleRef);
 		dt.Columns.Add (new DataColumn ("Token", typeof (string)));
 		dt.Columns.Add (new DataColumn ("Name", typeof (string)));
 
