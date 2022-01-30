@@ -32,32 +32,9 @@ public class MetadataView : View {
 			Source = MetadataDataSource.Shared,
 		};
 
-		ExportableTableView table = new () {
+		MetadataTableView table = new () {
 			X = Pos.Right (listview),
 			Y = 1,
-			Width = Dim.Fill (),
-			Height = Dim.Fill (),
-			CanFocus = true,
-			FullRowSelect = true,
-		};
-		table.Style.AlwaysShowHeaders = true;
-		table.CellActivated += (e) => {
-			switch (e.Table.ExtendedProperties ["Metadata"]) {
-			case MetadataTable.AssemblyRef:
-				if (e.Table.ExtendedProperties ["PE"] is not PEFile pe)
-					break;
-				var handle = MetadataTokens.AssemblyReferenceHandle ((int) e.Table.Rows [e.Row] [0]);
-				AssemblyReference ar = new (pe.Metadata, handle);
-				var a = AssemblyResolver.Resolver.Resolve (ar);
-				if (a is not null) {
-					var an = Program.Select ((n) => a.Equals (n.Tag) && (n is AssemblyNode));
-					if (an is null) {
-						an = Program.Add (a, selectAndGoto: true);
-					}
-				}
-				Program.EnsureSourceView ().Show (a);
-				break;
-			}
 		};
 
 		Add (assembly_label, table_label, listview, table);

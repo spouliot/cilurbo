@@ -354,7 +354,7 @@ partial class Program {
 	public static MetadataView EnsureMetadataTableView ()
 	{
 		if (!tabs.Tabs.Contains (metadata_tab)) {
-			tabs.SelectedTab = metadata_tab;
+			tabs.AddTab (metadata_tab, true);
 		}
 		tabs.SelectedTab = metadata_tab;
 		return (metadata_tab.View as MetadataView)!;
