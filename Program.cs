@@ -1,7 +1,4 @@
-using System.Reflection;
 using Terminal.Gui;
-
-[assembly: AssemblyVersion ("0.1.0.0")]
 
 namespace Cilurbo;
 
