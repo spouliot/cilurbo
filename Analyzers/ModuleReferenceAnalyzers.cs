@@ -6,6 +6,8 @@ using System.Text;
 using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.Decompiler.TypeSystem;
 
+using Cilurbo.MetadataTables;
+
 namespace Cilurbo.Analyzers.ModuleReferences;
 
 // List all the methods that expose functions from the module reference
@@ -36,7 +38,7 @@ public class PInvokeFinder : IAnalyzer {
 			return dt;
 
 		dt.ExtendedProperties.Add ("PE", pe);
-		dt.ExtendedProperties.Add ("Metadata", MetadataTables.MethodDef);
+		dt.ExtendedProperties.Add ("Metadata", MetadataTable.MethodDef);
 		dt.ExtendedProperties.Add ("Analyzer", this);
 		dt.Columns.Add (new DataColumn ("Result", typeof (int)));
 		dt.Columns.Add (new DataColumn ("RID", typeof (int)));

@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Data;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
@@ -6,42 +5,9 @@ using System.Text;
 
 using ICSharpCode.Decompiler.Metadata;
 
-using Terminal.Gui;
+namespace Cilurbo.MetadataTables;
 
-namespace Cilurbo;
-
-class MetadataDataSource : IListDataSource {
-
-	public static readonly MetadataDataSource Shared = new ();
-
-	static readonly List<string> tables = new () {
-		MetadataTables.TypeRef,
-		MetadataTables.MethodDef,
-		MetadataTables.MemberRef,
-		MetadataTables.Constant,
-		MetadataTables.ModuleRef,
-		MetadataTables.AssemblyRef,
-	};
-
-	public int Count => tables.Count;
-
-	public int Length => 16;
-
-	public bool IsMarked (int item) => false;
-
-	public void Render (ListView container, ConsoleDriver driver, bool selected, int item, int col, int line, int width, int start = 0)
-	{
-		driver.AddStr (tables [item]);
-	}
-
-	public void SetMark (int item, bool value)
-	{
-	}
-
-	public IList ToList () => tables;
-}
-
-class MetadataTables {
+class MetadataTable {
 
 	protected static string GetBlob (MetadataReader metadata, BlobHandle blob)
 	{

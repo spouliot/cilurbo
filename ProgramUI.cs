@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.Decompiler.TypeSystem;
@@ -7,6 +6,7 @@ using Terminal.Gui;
 using Terminal.Gui.Trees;
 
 using Cilurbo.Analyzers;
+using Cilurbo.MetadataTables;
 using Cilurbo.Services;
 
 namespace Cilurbo;
@@ -119,9 +119,7 @@ partial class Program {
 				if (pe is not null) {
 					var a = metadata_tree.Select ((n) => pe.Equals (n.Tag) && (n is AssemblyNode));
 					if (a is null) {
-						var an = metadata_tree.Add (pe);
-						metadata_tree.SelectedObject = an;
-						metadata_tree.GoTo (an);
+						Add (pe, selectAndGoto: true);
 					}
 					EnsureSourceView ().Show (pe);
 				}
@@ -133,7 +131,7 @@ partial class Program {
 			if (f is null) {
 				var pe = (btn.Tag as ITypeDefinition)!.ParentModule.PEFile;
 				if (pe is not null) {
-					metadata_tree.Add (pe);
+					Add (pe, selectAndGoto: false); // select will go to the right node
 					// try again with the assembly loaded
 					f = metadata_tree.Select ((n) => btn.Tag.Equals (n.Tag) && (n is TypeNode));
 				}
@@ -154,6 +152,16 @@ partial class Program {
 	public static MetadataNode? Select (Predicate<ITreeNode> predicate)
 	{
 		return (MetadataNode?) metadata_tree.Select (predicate);
+	}
+
+	public static AssemblyNode Add (PEFile pe, bool selectAndGoto = true)
+	{
+		var an = metadata_tree.Add (pe);
+		if (selectAndGoto) {
+			metadata_tree.SelectedObject = an;
+			metadata_tree.GoTo (an);
+		}
+		return an;
 	}
 
 	public static void AddTab (TabView.Tab tab, bool andSelect = true)
@@ -257,90 +265,15 @@ partial class Program {
 		metadata_tree.SetFocus ();
 	}
 
-	static readonly Dictionary<PEFile, TabView.Tab> metadata_tables_tabs = new ();
-
-	static TabView.Tab GetMetadataTab (PEFile pe)
-	{
-		if (metadata_tables_tabs.TryGetValue (pe, out var tab))
-			return tab;
-
-		Label assembly_label = new () {
-			Text = $"Assembly: {pe.FullName}",
-		};
-		Label table_label = new () {
-			Y = 1,
-			Text = "Tables:",
-		};
-		ListView listview = new () {
-			X = 0,
-			Y = 2,
-			Width = MetadataDataSource.Shared.Length + 1,
-			Height = Dim.Fill (),
-			AllowsMultipleSelection = false,
-			CanFocus = true,
-			Source = MetadataDataSource.Shared,
-		};
-
-		ExportableTableView table = new () {
-			X = Pos.Right (listview),
-			Y = 1,
-			Width = Dim.Fill (),
-			Height = Dim.Fill (),
-			CanFocus = true,
-			FullRowSelect = true,
-		};
-		table.Style.AlwaysShowHeaders = true;
-		table.CellActivated += (e) => {
-			switch (e.Table.ExtendedProperties ["Metadata"]) {
-			case MetadataTables.AssemblyRef:
-				if (e.Table.ExtendedProperties ["PE"] is not PEFile pe)
-					break;
-				var handle = MetadataTokens.AssemblyReferenceHandle ((int) e.Table.Rows [e.Row] [0]);
-				AssemblyReference ar = new (pe.Metadata, handle);
-				var a = AssemblyResolver.Resolver.Resolve (ar);
-				if (a is not null) {
-					var an = metadata_tree.Select ((n) => a.Equals (n.Tag) && (n is AssemblyNode));
-					if (an is null) {
-						an = metadata_tree.Add (a);
-						metadata_tree.SelectedObject = an;
-						metadata_tree.SetFocus ();
-					}
-				}
-				EnsureSourceView ().Show (a);
-				break;
-			}
-		};
-
-		View v = new () {
-			X = 0,
-			Y = 0,
-			Width = Dim.Fill (),
-			Height = Dim.Fill (),
-			CanFocus = false,
-		};
-		v.Add (assembly_label, table_label, listview, table);
-
-		listview.OpenSelectedItem += (args) => {
-			var table_name = listview.Source.ToList () [listview.SelectedItem] as string;
-			table.Table = MetadataTables.GetTable (table_name!, pe);
-			table.SetFocus ();
-		};
-
-		tab = new TabView.Tab ("Metadata", v);
-		tabs.AddTab (tab, true);
-		metadata_tables_tabs.Add (pe, tab);
-		return tab;
-	}
-
 	static void ViewMetadataTables ()
 	{
 		// menu is disabled (same condition) but this gets called anyway if the (menu) shortcut is used
 		if (metadata_tree.SelectedObject.Tag is not PEFile pe)
 			return;
 
-		var tab = GetMetadataTab (pe);
-		tabs.SelectedTab = tab;
-		tab.View.SetFocus ();
+		EnsureMetadataTableView ().PEFile = pe;
+		tabs.SelectedTab = metadata_tab;
+		metadata_tab.View.SetFocus ();
 	}
 
 	static void ViewPreferences ()
@@ -407,16 +340,23 @@ partial class Program {
 
 	static readonly TabView.Tab source_tab = new ("", new SourceView ());
 
-	static SourceView EnsureSourceView ()
+	public static SourceView EnsureSourceView ()
 	{
-		if (tabs.Tabs.Contains (source_tab)) {
-			tabs.SelectedTab = source_tab;
-			return (source_tab.View as SourceView)!;
+		if (!tabs.Tabs.Contains (source_tab)) {
+			tabs.AddTab (source_tab, true);
 		}
-
-		tabs.AddTab (source_tab, true);
 		tabs.SelectedTab = source_tab;
-
 		return (source_tab.View as SourceView)!;
+	}
+
+	static readonly TabView.Tab metadata_tab = new ("Metadata", new MetadataTableView ());
+
+	public static MetadataTableView EnsureMetadataTableView ()
+	{
+		if (!tabs.Tabs.Contains (metadata_tab)) {
+			tabs.SelectedTab = metadata_tab;
+		}
+		tabs.SelectedTab = metadata_tab;
+		return (metadata_tab.View as MetadataTableView)!;
 	}
 }
