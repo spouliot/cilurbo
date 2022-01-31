@@ -72,7 +72,7 @@ static class AnalyzersManager {
 	internal static AnalyzerView EnsureAnalyzerView ()
 	{
 		if (analyzer_view is not null) {
-			Program.SelectTab (analyzer_tab);
+			Program.SelectTab (analyzer_tab!);
 			return analyzer_view;
 		}
 

@@ -2,11 +2,9 @@ using System.Data;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Text;
-
+using Cilurbo.MetadataTables;
 using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.Decompiler.TypeSystem;
-
-using Cilurbo.MetadataTables;
 
 namespace Cilurbo.Analyzers.ModuleReferences;
 

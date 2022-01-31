@@ -1,13 +1,13 @@
 using System.Diagnostics;
 using System.Text;
-using ICSharpCode.Decompiler.Metadata;
-using ICSharpCode.Decompiler.TypeSystem;
-using Terminal.Gui;
-using Terminal.Gui.Trees;
 
 using Cilurbo.Analyzers;
 using Cilurbo.MetadataTables;
 using Cilurbo.Services;
+using ICSharpCode.Decompiler.Metadata;
+using ICSharpCode.Decompiler.TypeSystem;
+using Terminal.Gui;
+using Terminal.Gui.Trees;
 
 namespace Cilurbo;
 
@@ -132,6 +132,7 @@ partial class Program {
 				var pe = (btn.Tag as ITypeDefinition)!.ParentModule.PEFile;
 				if (pe is not null) {
 					Add (pe, selectAndGoto: false); // select will go to the right node
+
 					// try again with the assembly loaded
 					f = metadata_tree.Select ((n) => btn.Tag.Equals (n.Tag) && (n is TypeNode));
 				}
