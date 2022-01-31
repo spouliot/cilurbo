@@ -78,6 +78,8 @@ public class AssemblyNode : MetadataNode {
 	}
 
 	public DecompilerTypeSystem TypeSystem { get; private set; }
+
+	public PEFile PEFile => (Tag as PEFile)!;
 }
 
 public class AssemblyReferenceNode : MetadataNode {

@@ -1,4 +1,4 @@
-using System.Reflection.Metadata.Ecma335;
+using System.Data;
 
 using ICSharpCode.Decompiler.Metadata;
 using Terminal.Gui;
@@ -37,15 +37,16 @@ public class MetadataView : View {
 			X = Pos.Right (listview),
 			Y = 1,
 		};
+		table.CellActivated += CellActivated;
 
 		Add (assembly_label, table_label, listview, table);
 
 		listview.OpenSelectedItem += (args) => {
-			if (PEFile is null)
-				return;
-			var table_name = listview.Source.ToList () [listview.SelectedItem] as string;
-			table.Table = MetadataTable.GetTable (table_name!, PEFile);
-			table.SetFocus ();
+			var t = GetTable ();
+			if (t is not null) {
+				table.Table = t;
+				table.SetFocus ();
+			}
 		};
 	}
 
@@ -66,5 +67,33 @@ public class MetadataView : View {
 				assembly_label.Text = "Assembly: -";
 			}
 		}
+	}
+
+	DataTable? GetTable ()
+	{
+		if (PEFile is null)
+			return null;
+
+		var table_name = listview.Source.ToList () [listview.SelectedItem] as string;
+		return table_name switch {
+			MetadataTable.TypeRef => MetadataTable.GetTypeRefTable (PEFile),
+			MetadataTable.MethodDef => MetadataTable.GetMethodDefTable (PEFile),
+			MetadataTable.MemberRef => MetadataTable.GetMemberRefTable (PEFile),
+			MetadataTable.Constant => MetadataTable.GetConstantTable (PEFile),
+			MetadataTable.ModuleRef => MetadataTable.GetModuleRefTable (PEFile),
+			MetadataTable.AssemblyRef => MetadataTable.GetAssemblyRefTable (PEFile),
+			_ => throw new NotImplementedException (),
+		};
+	}
+
+	void CellActivated (TableView.CellActivatedEventArgs args)
+	{
+		switch (args.Table.ExtendedProperties ["Metadata"]) {
+		case MetadataTable.AssemblyRef:
+			MetadataTable.ActivateAssemblyRefTable (args);
+			break;
+		default:
+			break;
+		};
 	}
 }

@@ -4,6 +4,7 @@ using System.Reflection.Metadata.Ecma335;
 using System.Text;
 
 using ICSharpCode.Decompiler.Metadata;
+using Terminal.Gui;
 
 namespace Cilurbo.MetadataTables;
 
@@ -69,20 +70,7 @@ class MetadataTable {
 	public const string ModuleRef = "0x1A ModuleRef";
 	public const string AssemblyRef = "0x23 AssemblyRef";
 
-	public static DataTable GetTable (string tableName, PEFile module)
-	{
-		return tableName switch {
-			TypeRef => GetTypeRefTable (module),
-			MethodDef => GetMethodDefTable (module),
-			MemberRef => GetMemberRefTable (module),
-			Constant => GetConstantTable (module),
-			ModuleRef => GetModuleRefTable (module),
-			AssemblyRef => GetAssemblyRefTable (module),
-			_ => throw new NotImplementedException (),
-		};
-	}
-
-	static DataTable CreateTable (PEFile module, string tableName)
+	public static DataTable CreateTable (PEFile module, string tableName)
 	{
 		DataTable dt = new ();
 		dt.ExtendedProperties.Add ("PE", module);
@@ -93,7 +81,7 @@ class MetadataTable {
 
 	// 0x01 TypeRef
 	// https://github.com/stakx/ecma-335/blob/master/docs/ii.22.38-typeref-0x01.md
-	static DataTable GetTypeRefTable (PEFile module)
+	public static DataTable GetTypeRefTable (PEFile module)
 	{
 		DataTable dt = CreateTable (module, TypeRef);
 		dt.Columns.Add (new DataColumn ("Token", typeof (string)));
@@ -129,39 +117,9 @@ class MetadataTable {
 		return dt;
 	}
 
-	// 0x23 AssemblyRef
-	// https://github.com/stakx/ecma-335/blob/master/docs/ii.22.5-assemblyref-0x23.md
-	static DataTable GetAssemblyRefTable (PEFile module)
-	{
-		DataTable dt = CreateTable (module, AssemblyRef);
-		dt.Columns.Add (new DataColumn ("Token", typeof (string)));
-		dt.Columns.Add (new DataColumn ("Version", typeof (string)));
-		dt.Columns.Add (new DataColumn ("Flags", typeof (string)));
-		dt.Columns.Add (new DataColumn ("PublicKeyOrToken", typeof (string)));
-		dt.Columns.Add (new DataColumn ("Name", typeof (string)));
-		dt.Columns.Add (new DataColumn ("Culture", typeof (string)));
-		dt.Columns.Add (new DataColumn ("HashValue", typeof (string)));
-
-		var m = module.Metadata;
-		foreach (var row in m.AssemblyReferences) {
-			var aref = m.GetAssemblyReference (row);
-			dt.Rows.Add (new object [] {
-				MetadataTokens.GetRowNumber (row),
-				MetadataTokens.GetToken (row).ToString ("x8"),
-				"{" + aref.Version.ToString () + "}",
-				GetEnum (aref.Flags),
-				GetBlob (m, aref.PublicKeyOrToken),
-				GetString (m, aref.Name),
-				GetString (m, aref.Culture),
-				GetBlob (m, aref.HashValue),
-			});
-		}
-		return dt;
-	}
-
 	// 0x06 MethodDef
 	// https://github.com/stakx/ecma-335/blob/master/docs/ii.22.26-methoddef-0x06.md
-	static DataTable GetMethodDefTable (PEFile module)
+	public static DataTable GetMethodDefTable (PEFile module)
 	{
 		DataTable dt = CreateTable (module, MethodDef);
 		dt.Columns.Add (new DataColumn ("Token", typeof (string)));
@@ -191,7 +149,7 @@ class MetadataTable {
 
 	// 0x0A MemberRef
 	// https://github.com/stakx/ecma-335/blob/master/docs/ii.22.25-memberref-0x0a.md
-	static DataTable GetMemberRefTable (PEFile module)
+	public static DataTable GetMemberRefTable (PEFile module)
 	{
 		DataTable dt = CreateTable (module, MemberRef);
 		dt.Columns.Add (new DataColumn ("Token", typeof (string)));
@@ -215,7 +173,7 @@ class MetadataTable {
 
 	// 0x0B Constant
 	// https://github.com/stakx/ecma-335/blob/master/docs/ii.22.9-constant-0x0b.md
-	static DataTable GetConstantTable (PEFile module)
+	public static DataTable GetConstantTable (PEFile module)
 	{
 		DataTable dt = CreateTable (module, Constant);
 		dt.Columns.Add (new DataColumn ("Token", typeof (string)));
@@ -240,7 +198,7 @@ class MetadataTable {
 
 	// 0x1A ModuleRef
 	// https://github.com/stakx/ecma-335/blob/master/docs/ii.22.31-moduleref-0x1a.md
-	static DataTable GetModuleRefTable (PEFile module)
+	public static DataTable GetModuleRefTable (PEFile module)
 	{
 		DataTable dt = CreateTable (module, ModuleRef);
 		dt.Columns.Add (new DataColumn ("Token", typeof (string)));
@@ -257,5 +215,52 @@ class MetadataTable {
 			});
 		}
 		return dt;
+	}
+
+	// 0x23 AssemblyRef
+	// https://github.com/stakx/ecma-335/blob/master/docs/ii.22.5-assemblyref-0x23.md
+	public static DataTable GetAssemblyRefTable (PEFile module)
+	{
+		DataTable dt = CreateTable (module, AssemblyRef);
+		dt.Columns.Add (new DataColumn ("Token", typeof (string)));
+		dt.Columns.Add (new DataColumn ("Version", typeof (string)));
+		dt.Columns.Add (new DataColumn ("Flags", typeof (string)));
+		dt.Columns.Add (new DataColumn ("PublicKeyOrToken", typeof (string)));
+		dt.Columns.Add (new DataColumn ("Name", typeof (string)));
+		dt.Columns.Add (new DataColumn ("Culture", typeof (string)));
+		dt.Columns.Add (new DataColumn ("HashValue", typeof (string)));
+
+		var m = module.Metadata;
+		foreach (var row in m.AssemblyReferences) {
+			var aref = m.GetAssemblyReference (row);
+			dt.Rows.Add (new object [] {
+				MetadataTokens.GetRowNumber (row),
+				MetadataTokens.GetToken (row).ToString ("x8"),
+				"{" + aref.Version.ToString () + "}",
+				GetEnum (aref.Flags),
+				GetBlob (m, aref.PublicKeyOrToken),
+				GetString (m, aref.Name),
+				GetString (m, aref.Culture),
+				GetBlob (m, aref.HashValue),
+			});
+		}
+		return dt;
+	}
+
+	public static void ActivateAssemblyRefTable (TableView.CellActivatedEventArgs args)
+	{
+		if (args.Table.ExtendedProperties ["PE"] is not PEFile pe)
+			return;
+
+		var handle = MetadataTokens.AssemblyReferenceHandle ((int) args.Table.Rows [args.Row] [0]);
+		ICSharpCode.Decompiler.Metadata.AssemblyReference ar = new (pe.Metadata, handle);
+		var a = AssemblyResolver.Resolver.Resolve (ar);
+		if (a is not null) {
+			var an = Program.Select ((n) => (n is AssemblyNode an) && (an.PEFile.FileName == a.FileName));
+			if (an is null) {
+				an = Program.Add (a, selectAndGoto: true);
+			}
+		}
+		Program.EnsureSourceView ().Show (a);
 	}
 }
