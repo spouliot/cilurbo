@@ -18,7 +18,7 @@ As long as this remains a proof-of-concept (before 1.0) expect many breaking cha
 * View metadata tables (in progress)
 * [Gist support](https://github.com/spouliot/cilurbo/wiki/Gist)
     * Source code: [C#](https://gist.github.com/spouliot/7f212838bba691181c6153b3e51e2d54) and [IL](https://gist.github.com/spouliot/d04409250cf7b9549000f07523efc6f4)
-    * Metadata tables
+    * [Metadata tables](https://gist.github.com/spouliot/6a7ac81007849b99ce351047e16aaedc)
 * [Dash support](https://github.com/spouliot/cilurbo/wiki/Dash) : quickly open documentation for the selected item
 * Analyzers
     * [P/Invoke Finder](https://github.com/spouliot/cilurbo/wiki/AnalyzerPInvokeFinder)
@@ -31,3 +31,9 @@ As long as this remains a proof-of-concept (before 1.0) expect many breaking cha
 * Add resources
 
 Features are being added on a "as I need them" basis.
+
+## Built on top
+
+* [ICSharpCode.Decompiler](https://github.com/icsharpcode/ILSpy/tree/master/ICSharpCode.Decompiler)
+* [Octokit.net](https://github.com/octokit/octokit.net)
+* [Terminal.Gui](https://github.com/migueldeicaza/gui.cs)
