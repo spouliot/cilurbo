@@ -1,5 +1,3 @@
-using System.Reflection.Metadata.Ecma335;
-
 using ICSharpCode.Decompiler.Metadata;
 using Terminal.Gui;
 
@@ -14,6 +12,7 @@ class MetadataTableView : ExportableTableView {
 		MultiSelect = false;
 		FullRowSelect = true;
 		Style.AlwaysShowHeaders = true;
+		MaxCellWidth = Int32.MaxValue;
 	}
 
 	protected override void ExportMarkdown (TextWriter writer)
