@@ -3,6 +3,9 @@ using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Text;
 
+using ICSharpCode.Decompiler;
+using ICSharpCode.Decompiler.Disassembler;
+using ICSharpCode.Decompiler.IL;
 using ICSharpCode.Decompiler.Metadata;
 using Terminal.Gui;
 
@@ -51,15 +54,23 @@ class MetadataTable {
 		return sb.ToString ();
 	}
 
-	protected static string GetString (MetadataReader metadata, StringHandle handle)
+	protected static string GetString (MetadataReader metadata, StringHandle handle, bool prependOffset = true)
 	{
-#if false
+		if (!prependOffset)
+			return handle.IsNil ? "0x00000000 nil" : metadata.GetString (handle);
+
 		StringBuilder sb = new ();
-		sb.Append ("[heap: ").Append (MetadataTokens.GetHeapOffset (handle)).Append ("] ");
-		sb.Append (metadata.GetString (handle));
+		if (prependOffset) {
+			sb.Append ("0x");
+			if (handle.IsNil) {
+				sb.Append ("00000000 nil");
+			} else {
+				sb.Append (metadata.GetHeapOffset (handle).ToString ("x8"));
+				sb.Append (' ');
+				sb.Append (metadata.GetString (handle));
+			}
+		}
 		return sb.ToString ();
-#endif
-		return metadata.GetString (handle);
 	}
 
 	//   						   1234567890123456
@@ -68,7 +79,9 @@ class MetadataTable {
 	public const string MemberRef = "0x0A MemberRef";
 	public const string Constant = "0x0B Constant";
 	public const string ModuleRef = "0x1A ModuleRef";
+	public const string TypeSpec = "0x1B TypeSpec";
 	public const string AssemblyRef = "0x23 AssemblyRef";
+	public const string File = "0x26 File";
 
 	public static DataTable CreateTable (PEFile module, string tableName)
 	{
@@ -97,10 +110,10 @@ class MetadataTable {
 			rst_value.Append ("0x").Append (rst.ToString ("x8"));
 			if ((rst & 0x23000000) == 0x23000000) {
 				var aref = m.GetAssemblyReference ((AssemblyReferenceHandle) tref.ResolutionScope);
-				rst_value.Append (' ').Append (GetString (m, aref.Name));
+				rst_value.Append (' ').Append (GetString (m, aref.Name, prependOffset : false));
 			} else if ((rst & 0x01000000) == 0x01000000) {
 				var ntref = m.GetTypeReference ((TypeReferenceHandle) tref.ResolutionScope);
-				rst_value.Append (' ').Append (GetString (m, ntref.Name));
+				rst_value.Append (' ').Append (GetString (m, ntref.Name, prependOffset : false));
 			} else {
 				// TODO expand resolution scope - it can be many things
 				System.Diagnostics.Debugger.Break ();
@@ -158,15 +171,38 @@ class MetadataTable {
 		dt.Columns.Add (new DataColumn ("Signature", typeof (string)));
 
 		var m = module.Metadata;
+		StringBuilder builder = new ();
+		ITextOutput output = new StringBuilderTextOutput (builder);
 		foreach (var row in m.MemberReferences) {
 			var mref = m.GetMemberReference (row);
+			var klass = MetadataTokens.GetToken (mref.Parent);
+			builder.Append ("0x").Append (klass.ToString ("x8")).Append (' ');
+			// MethodDef, ModuleRef, TypeDef, TypeRef, or TypeSpec
+			if ((klass & 0x1b000000) == 0x1b000000) {
+				var kspec = m.GetTypeSpecification ((TypeSpecificationHandle) mref.Parent);
+				kspec.DecodeSignature (new DisassemblerSignatureTypeProvider (module, output), GenericContext.Empty) (ILNameSyntax.TypeName);
+			} else if ((klass & 0x01000000) == 0x01000000) {
+				var tref = m.GetTypeReference ((TypeReferenceHandle) mref.Parent);
+				builder.Append (GetString (m, tref.Name, prependOffset: false));
+			} else {
+				// TODO expand resolution scope - it can be many things
+				System.Diagnostics.Debugger.Break ();
+			}
+			var klass_string = builder.ToString ();
+			builder.Clear ();
+
+			builder.Append ("0x").Append (m.GetHeapOffset (mref.Signature).ToString ("x8")).Append (' ');
+			GenericContext context = new (default (TypeDefinitionHandle), module);
+			((EntityHandle) row).WriteTo (module, output, context, ILNameSyntax.TypeName);
+
 			dt.Rows.Add (new object [] {
 				MetadataTokens.GetRowNumber (row),
 				MetadataTokens.GetToken (row).ToString ("x8"),
-				MetadataTokens.GetToken (mref.Parent).ToString ("x8"),
+				klass_string,
 				GetString (m, mref.Name),
-				GetBlob (m, mref.Signature),
+				builder.ToString (),
 			});
+			builder.Clear ();
 		}
 		return dt;
 	}
@@ -217,6 +253,32 @@ class MetadataTable {
 		return dt;
 	}
 
+	// 0x1B TypeSpec
+	// https://github.com/stakx/ecma-335/blob/master/docs/ii.22.39-typespec-0x1b.md
+	public static DataTable GetTypeSpecTable (PEFile module)
+	{
+		DataTable dt = CreateTable (module, ModuleRef);
+		dt.Columns.Add (new DataColumn ("Token", typeof (string)));
+		dt.Columns.Add (new DataColumn ("Signature", typeof (string)));
+
+		StringBuilder signature = new ();
+		ITextOutput output = new StringBuilderTextOutput (signature);
+		var m = module.Metadata;
+		for (var row = 1; row <= m.GetTableRowCount (TableIndex.TypeSpec); row++) {
+			var handle = MetadataTokens.TypeSpecificationHandle (row);
+			var tspec = m.GetTypeSpecification (handle);
+			signature.Append (MetadataTokens.GetToken (handle).ToString ("x8")).Append (' ');
+			tspec.DecodeSignature (new DisassemblerSignatureTypeProvider (module, output), GenericContext.Empty) (ILNameSyntax.TypeName);
+			dt.Rows.Add (new object [] {
+				row,
+				MetadataTokens.GetToken (handle).ToString ("x8"),
+				signature.ToString (),
+			});
+			signature.Clear ();
+		}
+		return dt;
+	}
+
 	// 0x23 AssemblyRef
 	// https://github.com/stakx/ecma-335/blob/master/docs/ii.22.5-assemblyref-0x23.md
 	public static DataTable GetAssemblyRefTable (PEFile module)
@@ -262,5 +324,29 @@ class MetadataTable {
 			}
 		}
 		Program.EnsureSourceView ().Show (a);
+	}
+
+	// 0x26 File
+	// https://github.com/stakx/ecma-335/blob/master/docs/ii.22.19-file-0x26.md
+	public static DataTable GetFileTable (PEFile module)
+	{
+		DataTable dt = CreateTable (module, AssemblyRef);
+		dt.Columns.Add (new DataColumn ("Token", typeof (string)));
+		dt.Columns.Add (new DataColumn ("Flags", typeof (string)));
+		dt.Columns.Add (new DataColumn ("Name", typeof (string)));
+		dt.Columns.Add (new DataColumn ("HashValue", typeof (string)));
+
+		var m = module.Metadata;
+		foreach (var row in m.AssemblyFiles) {
+			var f = m.GetAssemblyFile (row);
+			dt.Rows.Add (new object [] {
+				MetadataTokens.GetRowNumber (row),
+				MetadataTokens.GetToken (row).ToString ("x8"),
+				f.ContainsMetadata ? "0x0000 ContainsMetaData" : "0x0001 ContainsNoMetaData",
+				GetString (m, f.Name),
+				GetBlob (m, f.HashValue),
+			});
+		}
+		return dt;
 	}
 }

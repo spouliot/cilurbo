@@ -14,7 +14,9 @@ class MetadataDataSource : IListDataSource {
 		MetadataTable.MemberRef,
 		MetadataTable.Constant,
 		MetadataTable.ModuleRef,
+		MetadataTable.TypeSpec,
 		MetadataTable.AssemblyRef,
+		MetadataTable.File,
 	};
 
 	public int Count => tables.Count;

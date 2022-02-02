@@ -81,7 +81,9 @@ public class MetadataView : View {
 			MetadataTable.MemberRef => MetadataTable.GetMemberRefTable (PEFile),
 			MetadataTable.Constant => MetadataTable.GetConstantTable (PEFile),
 			MetadataTable.ModuleRef => MetadataTable.GetModuleRefTable (PEFile),
+			MetadataTable.TypeSpec => MetadataTable.GetTypeSpecTable (PEFile),
 			MetadataTable.AssemblyRef => MetadataTable.GetAssemblyRefTable (PEFile),
+			MetadataTable.File => MetadataTable.GetFileTable (PEFile),
 			_ => throw new NotImplementedException (),
 		};
 	}
