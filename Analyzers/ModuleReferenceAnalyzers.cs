@@ -36,7 +36,7 @@ public class PInvokeFinder : IAnalyzer {
 			return dt;
 
 		dt.ExtendedProperties.Add ("PE", pe);
-		dt.ExtendedProperties.Add ("Metadata", MetadataTable.MethodDef);
+		dt.ExtendedProperties.Add ("Metadata", MetadataTable.ModuleRef);
 		dt.ExtendedProperties.Add ("Analyzer", this);
 		dt.Columns.Add (new DataColumn ("Result", typeof (int)));
 		dt.Columns.Add (new DataColumn ("RID", typeof (int)));
