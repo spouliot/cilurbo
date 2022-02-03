@@ -1,10 +1,6 @@
-using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using System.Reflection.Metadata.Ecma335;
 
-using ICSharpCode.Decompiler.Metadata;
-using ICSharpCode.Decompiler.TypeSystem;
 using Terminal.Gui;
 
 namespace Cilurbo.Analyzers;
@@ -16,7 +12,9 @@ public interface IAnalyzer {
 
 	bool IsApplicable ([NotNullWhen (true)] MetadataNode? node);
 
-	DataTable GetTable (MetadataNode node);
+	void SetTable (AnalyzerView view, MetadataNode node);
+
+	void OnActivation (TableView.CellActivatedEventArgs args);
 }
 
 [AttributeUsage (AttributeTargets.Class)]
@@ -40,7 +38,10 @@ sealed class AnalyzerMenuItem : MenuItem {
 			var node = Program.SelectedNode;
 			if (!analyzer.IsApplicable (node))
 				return;
-			AnalyzersManager.EnsureAnalyzerView ().Table = analyzer.GetTable (node);
+			var av = AnalyzersManager.EnsureAnalyzerView ();
+			av.Analyzer = analyzer;
+			av.Style.ColumnStyles.Clear ();
+			analyzer.SetTable (av, node);
 		};
 	}
 }
@@ -62,7 +63,7 @@ static class AnalyzersManager {
 
 			list.Add (new AnalyzerMenuItem (attr.Name, (IAnalyzer) Activator.CreateInstance (type)!));
 		}
-		list.Sort ();
+		list.Sort ((a, b) => a.Title.CompareTo (b.Title));
 		return list.ToArray ();
 	}
 
@@ -77,19 +78,6 @@ static class AnalyzersManager {
 		}
 
 		analyzer_view = new ();
-		analyzer_view.CellActivated += (e) => {
-			if (e.Table.ExtendedProperties ["PE"] is PEFile pe) {
-				var rid = MetadataTokens.EntityHandle (TableIndex.MethodDef, (int) e.Table.Rows [analyzer_view.SelectedRow] [1]);
-				Program.Select ((n) => {
-					if (n.Tag is IMember m) {
-						if (m.ParentModule.PEFile != pe)
-							return false;
-						return m.MetadataToken.Equals (rid);
-					}
-					return false;
-				});
-			}
-		};
 		analyzer_tab = new ("Analyzer", analyzer_view);
 		Program.AddTab (analyzer_tab);
 		return analyzer_view;

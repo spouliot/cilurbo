@@ -5,6 +5,7 @@ using System.Text;
 using Cilurbo.MetadataTables;
 using ICSharpCode.Decompiler.Metadata;
 using ICSharpCode.Decompiler.TypeSystem;
+using Terminal.Gui;
 
 namespace Cilurbo.Analyzers.ModuleReferences;
 
@@ -12,8 +13,16 @@ namespace Cilurbo.Analyzers.ModuleReferences;
 [Analyzer ("[r] PInvoke Finder")]
 public class PInvokeFinder : IAnalyzer {
 
+	readonly TableView.ColumnStyle hex8;
+
 	public PInvokeFinder ()
 	{
+		hex8 = new ();
+		hex8.RepresentationGetter = (object o) => {
+			if (o is int i)
+				return "0x" + i.ToString ("x8");
+			return null;
+		};
 	}
 
 	public int ExternallySearchableColumn => 2;
@@ -23,25 +32,33 @@ public class PInvokeFinder : IAnalyzer {
 		return node is ModuleReferenceNode;
 	}
 
-	public DataTable GetTable (MetadataNode node)
+	public void SetTable (AnalyzerView view, MetadataNode node)
 	{
 		DataTable dt = new ();
+
+		dt.Columns.Add (new DataColumn ("Result", typeof (int)));
+
+		DataColumn token_col = new ("Token", typeof (int));
+		dt.Columns.Add (token_col);
+		view.Style.ColumnStyles.Add (token_col, hex8);
+
+		dt.Columns.Add (new DataColumn ("Symbol", typeof (string))); // externally searchable column
+		dt.Columns.Add (new DataColumn ("P/invoke Method", typeof (string)));
+
+		view.Table = dt;
+
 		if (node is not ModuleReferenceNode mrn)
-			return dt;
+			return;
 		if (mrn.Tag is not ModuleReference mr)
-			return dt;
+			return;
 		if (mrn.Parent is not AssemblyNode an)
-			return dt;
+			return;
 		if (an.Tag is not PEFile pe)
-			return dt;
+			return;
 
 		dt.ExtendedProperties.Add ("PE", pe);
 		dt.ExtendedProperties.Add ("Metadata", MetadataTable.ModuleRef);
 		dt.ExtendedProperties.Add ("Analyzer", this);
-		dt.Columns.Add (new DataColumn ("Result", typeof (int)));
-		dt.Columns.Add (new DataColumn ("RID", typeof (int)));
-		dt.Columns.Add (new DataColumn ("Symbol", typeof (string))); // externally searchable column
-		dt.Columns.Add (new DataColumn ("P/invoke Method", typeof (string)));
 
 		int result = 1;
 		StringBuilder method_name = new ();
@@ -64,14 +81,28 @@ public class PInvokeFinder : IAnalyzer {
 				method_name.AppendType (type).Append ('.').AppendMethod (m);
 				dt.Rows.Add (new object [] {
 					result++,
-					MetadataTokens.GetRowNumber (mh),
+					MetadataTokens.GetToken (mh),
 					pe.Metadata.GetString (mi.Name),
 					method_name.ToString (),
 				});
 				method_name.Clear ();
 			}
 		}
+	}
 
-		return dt;
+	public void OnActivation (TableView.CellActivatedEventArgs args)
+	{
+		var table = args.Table;
+		if (table.ExtendedProperties ["PE"] is PEFile pe) {
+			var rid = MetadataTokens.EntityHandle (TableIndex.MethodDef, (int) table.Rows [args.Row] [1]);
+			Program.Select ((n) => {
+				if (n.Tag is IMember m) {
+					if (m.ParentModule.PEFile?.FileName != pe.FileName)
+						return false;
+					return m.MetadataToken.Equals (rid);
+				}
+				return false;
+			});
+		}
 	}
 }

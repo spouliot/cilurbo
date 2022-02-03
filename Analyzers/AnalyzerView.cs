@@ -4,7 +4,7 @@ using Terminal.Gui;
 
 namespace Cilurbo.Analyzers;
 
-class AnalyzerView : ExportableTableView {
+public class AnalyzerView : ExportableTableView {
 
 	public AnalyzerView ()
 	{
@@ -13,6 +13,8 @@ class AnalyzerView : ExportableTableView {
 		MultiSelect = false;
 		FullRowSelect = true;
 	}
+
+	public IAnalyzer? Analyzer { get; set; }
 
 	public override bool ProcessKey (KeyEvent kb)
 	{
@@ -24,6 +26,12 @@ class AnalyzerView : ExportableTableView {
 			return true;
 		}
 		return base.ProcessKey (kb);
+	}
+
+	protected override void OnCellActivated (CellActivatedEventArgs args)
+	{
+		Analyzer?.OnActivation (args);
+		base.OnCellActivated (args);
 	}
 
 	protected override void ExportMarkdown (TextWriter writer)

@@ -4,7 +4,7 @@ using Terminal.Gui;
 
 namespace Cilurbo;
 
-class ExportableTableView : TableView {
+public class ExportableTableView : TableView {
 
 	public ExportableTableView ()
 	{
