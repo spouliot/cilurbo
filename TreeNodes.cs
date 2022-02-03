@@ -242,6 +242,17 @@ public class EventNode : MemberNode {
 
 	public EventNode (IEvent @event, MetadataNode parent) : base (@event, parent)
 	{
+		List<ITreeNode> nodes = new ();
+		var a = @event.AddAccessor;
+		if (a is not null)
+			nodes.Add (new MethodNode (a, this));
+		var r = @event.RemoveAccessor;
+		if (r is not null)
+			nodes.Add (new MethodNode (r, this));
+		var i = @event.InvokeAccessor;
+		if (i is not null)
+			nodes.Add (new MethodNode (i, this));
+		Children = nodes;
 	}
 }
 
@@ -252,6 +263,14 @@ public class PropertyNode : MemberNode {
 
 	public PropertyNode (IProperty property, MetadataNode parent) : base (property, parent)
 	{
+		List<ITreeNode> nodes = new ();
+		var g = property.Getter;
+		if (g is not null)
+			nodes.Add (new MethodNode (g, this));
+		var s = property.Setter;
+		if (s is not null)
+			nodes.Add (new MethodNode (s, this));
+		Children = nodes;
 	}
 }
 
