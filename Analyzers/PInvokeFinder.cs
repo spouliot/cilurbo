@@ -13,16 +13,8 @@ namespace Cilurbo.Analyzers.ModuleReferences;
 [Analyzer ("[r] PInvoke Finder")]
 public class PInvokeFinder : IAnalyzer {
 
-	readonly TableView.ColumnStyle hex8;
-
 	public PInvokeFinder ()
 	{
-		hex8 = new ();
-		hex8.RepresentationGetter = (object o) => {
-			if (o is int i)
-				return "0x" + i.ToString ("x8");
-			return null;
-		};
 	}
 
 	public int ExternallySearchableColumn => 2;
@@ -40,7 +32,7 @@ public class PInvokeFinder : IAnalyzer {
 
 		DataColumn token_col = new ("Token", typeof (int));
 		dt.Columns.Add (token_col);
-		view.Style.ColumnStyles.Add (token_col, hex8);
+		view.Style.ColumnStyles.Add (token_col, ColumnStyles.IntHex8);
 
 		dt.Columns.Add (new DataColumn ("Symbol", typeof (string))); // externally searchable column
 		dt.Columns.Add (new DataColumn ("P/invoke Method", typeof (string)));
