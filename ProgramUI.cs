@@ -117,9 +117,11 @@ partial class Program {
 			if (arn.Tag is AssemblyReference ar) {
 				var pe = AssemblyResolver.Resolver.Resolve (ar);
 				if (pe is not null) {
-					var a = metadata_tree.Select (pe);
+					var a = metadata_tree.Find (pe);
 					if (a is null) {
 						Add (pe, selectAndGoto: true);
+					} else {
+						metadata_tree.Select (a);
 					}
 					EnsureSourceView ().Show (pe);
 				}
@@ -138,10 +140,12 @@ partial class Program {
 				if (f is not null) {
 					metadata_tree.Expand (f); // pre-expand the PE node since we're searching below it
 					var btmt = bt.MetadataToken;
-					f = metadata_tree.Select (f, (n) => (n is TypeNode tn) && btmt.Equals (tn.TypeDefinition.MetadataToken));
+					f = metadata_tree.Find (f, (n) => (n is TypeNode tn) && btmt.Equals (tn.TypeDefinition.MetadataToken));
 				}
-				if (f is not null)
+				if (f is not null) {
+					metadata_tree.Select (f);
 					EnsureSourceView ().Show (f.Tag);
+				}
 			}
 			break;
 		default:
@@ -156,7 +160,8 @@ partial class Program {
 
 	public static MetadataNode? Select (Predicate<ITreeNode> predicate)
 	{
-		return (MetadataNode?) metadata_tree.Select (predicate);
+		var f = metadata_tree.Find (predicate);
+		return metadata_tree.Select (f);
 	}
 
 	public static AssemblyNode Add (PEFile pe, bool selectAndGoto = true)
