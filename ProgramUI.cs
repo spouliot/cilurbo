@@ -117,7 +117,7 @@ partial class Program {
 			if (arn.Tag is AssemblyReference ar) {
 				var pe = AssemblyResolver.Resolver.Resolve (ar);
 				if (pe is not null) {
-					var a = metadata_tree.Select ((n) => pe.Equals (n.Tag) && (n is AssemblyNode));
+					var a = metadata_tree.Select (pe);
 					if (a is null) {
 						Add (pe, selectAndGoto: true);
 					}
@@ -126,19 +126,23 @@ partial class Program {
 			}
 			break;
 		case BaseTypeNode btn:
-			var f = metadata_tree.Select ((n) => btn.Tag.Equals (n.Tag) && (n is TypeNode));
-			// it might not be loaded yet (or not found)
-			if (f is null) {
-				var pe = (btn.Tag as ITypeDefinition)!.ParentModule.PEFile;
-				if (pe is not null) {
-					Add (pe, selectAndGoto: false); // select will go to the right node
-
-					// try again with the assembly loaded
-					f = metadata_tree.Select ((n) => btn.Tag.Equals (n.Tag) && (n is TypeNode));
+			if (btn.Tag is ITypeDefinition bt) {
+				var pe = bt.ParentModule.PEFile!;
+				// find the PE node (and load/add it if needed)...
+				var f = metadata_tree.Find (pe);
+				if (f is null) {
+					Add (pe, selectAndGoto: false);
+					f = metadata_tree.Find (pe);
 				}
+				// then search for the type from that node...
+				if (f is not null) {
+					metadata_tree.Expand (f); // pre-expand the PE node since we're searching below it
+					var btmt = bt.MetadataToken;
+					f = metadata_tree.Select (f, (n) => (n is TypeNode tn) && btmt.Equals (tn.TypeDefinition.MetadataToken));
+				}
+				if (f is not null)
+					EnsureSourceView ().Show (f.Tag);
 			}
-			if (f is not null)
-				EnsureSourceView ().Show (f.Tag);
 			break;
 		default:
 			metadata_tree.Expand (node);

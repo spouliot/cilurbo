@@ -150,7 +150,7 @@ public class TypeNode : MetadataNode {
 		TypeDefinitionHandle handle = (TypeDefinitionHandle) type.MetadataToken;
 		if (typeSystem.MainModule.ResolveEntity (handle) is not ITypeDefinition t)
 			throw new InvalidOperationException ();
-		Tag = t;
+		Tag = TypeDefinition = t;
 
 		List<ITreeNode> nodes = new ();
 
@@ -188,6 +188,8 @@ public class TypeNode : MetadataNode {
 
 		Children = nodes;
 	}
+
+	public ITypeDefinition TypeDefinition { get; private set; }
 }
 
 public class BaseTypeNode : MetadataNode {

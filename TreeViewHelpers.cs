@@ -22,8 +22,18 @@ static class TreeViewHelpers {
 
 	public static ITreeNode? Select (this TreeView self, Predicate<ITreeNode> predicate)
 	{
+		return self.Select (self.Objects, predicate);
+	}
+
+	public static ITreeNode? Select (this TreeView self, ITreeNode node, Predicate<ITreeNode> predicate)
+	{
+		return self.Select (node.Children, predicate);
+	}
+
+	public static ITreeNode? Select (this TreeView self, IEnumerable<ITreeNode> nodes, Predicate<ITreeNode> predicate)
+	{
 		Stack<ITreeNode> parents = new ();
-		var result = Select (self, self.Objects, predicate, parents);
+		var result = Find (self, nodes, predicate, parents);
 		if (result is not null) {
 			if (parents.Count > 0) {
 				foreach (var p in parents.Reverse ())
@@ -36,7 +46,23 @@ static class TreeViewHelpers {
 		return result;
 	}
 
-	static ITreeNode? Select (this TreeView self, IEnumerable<ITreeNode> nodes, Predicate<ITreeNode> predicate, Stack<ITreeNode> parents)
+	public static ITreeNode? Find (this TreeView self, Predicate<ITreeNode> predicate)
+	{
+		return self.Find (self.Objects, predicate);
+	}
+
+	public static ITreeNode? Find (this TreeView self, ITreeNode node, Predicate<ITreeNode> predicate)
+	{
+		return self.Select (node.Children, predicate);
+	}
+
+	public static ITreeNode? Find (this TreeView self, IEnumerable<ITreeNode> nodes, Predicate<ITreeNode> predicate)
+	{
+		Stack<ITreeNode> parents = new ();
+		return Find (self, self.Objects, predicate, parents);
+	}
+
+	static ITreeNode? Find (this TreeView self, IEnumerable<ITreeNode> nodes, Predicate<ITreeNode> predicate, Stack<ITreeNode> parents)
 	{
 		foreach (var n in nodes) {
 			if (predicate (n))
@@ -44,11 +70,38 @@ static class TreeViewHelpers {
 
 			parents.Push (n);
 			if (n.Children.Any ()) {
-				var found = Select (self, n.Children, predicate, parents);
+				var found = Find (self, n.Children, predicate, parents);
 				if (found is not null)
 					return found;
 			}
 			parents.Pop ();
+		}
+		return null;
+	}
+
+	// helper to avoid recursion since assembly nodes are always first level
+	public static ITreeNode? Select (this TreeView self, PEFile pe)
+	{
+		foreach (var n in self.Objects) {
+			if (n is AssemblyNode an) {
+				if (pe.FileName == an.PEFile.FileName) {
+					self.GoTo (n);
+					self.SelectedObject = n;
+					self.SetFocus ();
+					return n;
+				}
+			}
+		}
+		return null;
+	}
+
+	public static ITreeNode? Find (this TreeView self, PEFile pe)
+	{
+		foreach (var n in self.Objects) {
+			if (n is AssemblyNode an) {
+				if (pe.FileName == an.PEFile.FileName)
+					return n;
+			}
 		}
 		return null;
 	}
