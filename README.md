@@ -22,12 +22,13 @@ As long as this remains a proof-of-concept (before 1.0) expect many breaking cha
 * [Dash support](https://github.com/spouliot/cilurbo/wiki/Dash) : quickly open documentation for the selected item
 * Analyzers
     * [P/Invoke Finder](https://github.com/spouliot/cilurbo/wiki/AnalyzerPInvokeFinder)
+    * Method Uses
 
 ## TODO
 
 * Add missing metadata tables
 * Add decompiler options / preferences
-* Add analysis tools
+* Add more analysis tools
 * Add resources
 
 Features are being added on a "as I need them" basis.

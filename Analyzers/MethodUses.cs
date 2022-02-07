@@ -54,7 +54,7 @@ public class MethodUses : IAnalyzer {
 			return;
 
 		dt.ExtendedProperties.Add ("PE", pe);
-		MetadataModule mainModule = (MetadataModule)m.ParentModule;
+		MetadataModule mainModule = (MetadataModule) m.ParentModule;
 		dt.ExtendedProperties.Add ("MetadataModule", mainModule);
 		dt.ExtendedProperties.Add ("Metadata", MetadataTable.MethodDef);
 		dt.ExtendedProperties.Add ("Analyzer", this);
