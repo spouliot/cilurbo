@@ -1,4 +1,4 @@
-using Octokit;
+using SimpleGist;
 
 namespace Cilurbo.Services;
 
@@ -27,18 +27,18 @@ class GistSupport {
 		if (token is null)
 			return null; // TODO log
 
-		GitHubClient client = new (new ProductHeaderValue ("Cilurbo")) {
-			Credentials = new Credentials (OAuthToken)
-		};
-		NewGist gist = new () {
+		GistClient.OAuthToken = token;
+
+		GistRequest request = new () {
 			Description = description,
 			Public = false,
 		};
-		gist.Files.Add (fileName, content ?? "");
-		var result = await client.Gist.Create (gist);
-		if (ExecSupport.Run ("open " + result.HtmlUrl) != 0) {
+		request.AddFile (fileName, content ?? "");
+
+		var result = await GistClient.CreateAsync (request);
+		if (ExecSupport.Run ("open " + result.Url) != 0) {
 			// TODO Log
 		}
-		return result.HtmlUrl;
+		return result.Url;
 	}
 }

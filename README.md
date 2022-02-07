@@ -35,5 +35,4 @@ Features are being added on a "as I need them" basis.
 ## Built on top
 
 * [ICSharpCode.Decompiler](https://github.com/icsharpcode/ILSpy/tree/master/ICSharpCode.Decompiler)
-* [Octokit.net](https://github.com/octokit/octokit.net)
 * [Terminal.Gui](https://github.com/migueldeicaza/gui.cs)
