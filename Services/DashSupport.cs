@@ -16,7 +16,7 @@ static class DashSupport {
 		var q = Uri.EscapeDataString (search);
 
 		// `-g` as Dash will decide if it needs to become the active window -> https://github.com/ram-nadella/DashMate.tmbundle/issues/17
-		var result = ExecSupport.Run ($"open -g \"dash://{q}\"");
+		var result = ExecSupport.Run ("open", $"-g \"dash://{q}\"");
 		// TODO log error
 		if (result != 0)
 			MessageBox.Query ("Error", $"Dash failed to open {result}", "_Ok");

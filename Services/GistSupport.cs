@@ -36,7 +36,7 @@ class GistSupport {
 		request.AddFile (fileName, content ?? "");
 
 		var result = await GistClient.CreateAsync (request);
-		if (ExecSupport.Run ("open " + result.Url) != 0) {
+		if (ExecSupport.Run ("open", result.Url) != 0) {
 			// TODO Log
 		}
 		return result.Url;

@@ -35,5 +35,6 @@ Features are being added on a "as I need them" basis.
 
 ## Built on top
 
+* [CliWrap](https://github.com/Tyrrrz/CliWrap)
 * [ICSharpCode.Decompiler](https://github.com/icsharpcode/ILSpy/tree/master/ICSharpCode.Decompiler)
 * [Terminal.Gui](https://github.com/migueldeicaza/gui.cs)

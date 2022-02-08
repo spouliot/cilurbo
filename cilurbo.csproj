@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="CliWrap" Version="3.4.1" />
     <PackageReference Include="ICSharpCode.Decompiler" Version="7.2.0.6791-preview3" />
     <PackageReference Include="Terminal.Gui" Version="1.4.0" />
   </ItemGroup>

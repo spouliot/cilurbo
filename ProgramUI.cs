@@ -293,7 +293,7 @@ partial class Program {
 
 	static void HelpKeyBindings ()
 	{
-		ExecSupport.Run ("open https://github.com/spouliot/cilurbo/wiki/KeyBindings");
+		ExecSupport.Run ("open", "https://github.com/spouliot/cilurbo/wiki/KeyBindings");
 	}
 
 	static void HelpAbout ()
