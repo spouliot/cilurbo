@@ -1,3 +1,5 @@
+// For latest version, see https://github.com/spouliot/SimpleGist/blob/main/SimpleGist.cs
+//
 // MIT License
 //
 // Copyright (c) 2022 Sebastien Pouliot
@@ -35,7 +37,18 @@ public class GistClient {
 		client.BaseAddress = new Uri ("https://api.github.com/");
 		client.DefaultRequestHeaders.Accept.Clear ();
 		client.DefaultRequestHeaders.Accept.Add (new MediaTypeWithQualityHeaderValue ("application/vnd.github.v3+json"));
-		client.DefaultRequestHeaders.UserAgent.Add (new ProductInfoHeaderValue ("SimpleGist", "1.0"));
+		client.DefaultRequestHeaders.UserAgent.Add (new ProductInfoHeaderValue ("SimpleGist", "1.1"));
+
+		var token = Environment.GetEnvironmentVariable ("GITHUB_OAUTH_TOKEN");
+		if (token is null) {
+			var home = Environment.GetEnvironmentVariable ("HOME");
+			if (home is not null) {
+				var gist = Path.Combine (home, ".gist");
+				if (File.Exists (gist))
+					token = File.ReadAllText (gist);
+			}
+		}
+		OAuthToken = token;
 	}
 
 	public static string? OAuthToken {
@@ -120,10 +133,22 @@ public class GistResponse {
 	internal GistResponse (HttpStatusCode status, string content)
 	{
 		StatusCode = status;
-		// quite hackish - get the first `html_url` from the JSON response
-		int first = content.IndexOf ("\"html_url\"", StringComparison.Ordinal);
-		int start = content.IndexOf ('"', first + "\"html_url\"".Length + 1);
-		int end = content.IndexOf ('"', start + 1);
-		Url = content [(start + 1)..end];
+		switch (status) {
+		case HttpStatusCode.Created:
+			// quite hackish - get the first `html_url` from the JSON response
+			int first = content.IndexOf ("\"html_url\"", StringComparison.Ordinal);
+			int start = content.IndexOf ('"', first + "\"html_url\"".Length + 1);
+			int end = content.IndexOf ('"', start + 1);
+			Url = content [(start + 1)..end];
+			break;
+		case HttpStatusCode.BadRequest:
+		case HttpStatusCode.Unauthorized:
+		case HttpStatusCode.UnprocessableEntity:
+			Url = $"https://github.com/spouliot/SimpleGist/wiki#{status}";
+			break;
+		default:
+			Url = "https://github.com/spouliot/SimpleGist/wiki#Errors";
+			break;
+		}
 	}
 }
