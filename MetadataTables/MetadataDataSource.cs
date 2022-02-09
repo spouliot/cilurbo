@@ -17,6 +17,7 @@ class MetadataDataSource : IListDataSource {
 		MetadataTable.TypeSpec,
 		MetadataTable.AssemblyRef,
 		MetadataTable.File,
+		MetadataTable.ExportedType,
 	};
 
 	public int Count => tables.Count;

@@ -84,6 +84,7 @@ public class MetadataView : View {
 			MetadataTable.TypeSpec => MetadataTable.GetTypeSpecTable (PEFile),
 			MetadataTable.AssemblyRef => MetadataTable.GetAssemblyRefTable (PEFile),
 			MetadataTable.File => MetadataTable.GetFileTable (PEFile),
+			MetadataTable.ExportedType => MetadataTable.GetExportedTypeTable (PEFile),
 			_ => throw new NotImplementedException (),
 		};
 	}

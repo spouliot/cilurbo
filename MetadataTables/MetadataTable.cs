@@ -29,7 +29,7 @@ class MetadataTable {
 
 	protected static string GetEnum (object @enum)
 	{
-		StringBuilder sb = new ();
+		StringBuilder sb = new ("0x");
 		switch (Type.GetTypeCode (@enum.GetType ().GetEnumUnderlyingType ())) {
 		case TypeCode.Byte:
 		case TypeCode.SByte:
@@ -82,6 +82,7 @@ class MetadataTable {
 	public const string TypeSpec = "0x1B TypeSpec";
 	public const string AssemblyRef = "0x23 AssemblyRef";
 	public const string File = "0x26 File";
+	public const string ExportedType = "0x27 ExportedType";
 
 	public static DataTable CreateTable (PEFile module, string tableName)
 	{
@@ -110,10 +111,10 @@ class MetadataTable {
 			rst_value.Append ("0x").Append (rst.ToString ("x8"));
 			if ((rst & 0x23000000) == 0x23000000) {
 				var aref = m.GetAssemblyReference ((AssemblyReferenceHandle) tref.ResolutionScope);
-				rst_value.Append (' ').Append (GetString (m, aref.Name, prependOffset : false));
+				rst_value.Append (' ').Append (GetString (m, aref.Name, prependOffset: false));
 			} else if ((rst & 0x01000000) == 0x01000000) {
 				var ntref = m.GetTypeReference ((TypeReferenceHandle) tref.ResolutionScope);
-				rst_value.Append (' ').Append (GetString (m, ntref.Name, prependOffset : false));
+				rst_value.Append (' ').Append (GetString (m, ntref.Name, prependOffset: false));
 			} else {
 				// TODO expand resolution scope - it can be many things
 				System.Diagnostics.Debugger.Break ();
@@ -345,6 +346,40 @@ class MetadataTable {
 				f.ContainsMetadata ? "0x0000 ContainsMetaData" : "0x0001 ContainsNoMetaData",
 				GetString (m, f.Name),
 				GetBlob (m, f.HashValue),
+			});
+		}
+		return dt;
+	}
+
+	// 0x27 ExportedType
+	// https://github.com/stakx/ecma-335/blob/master/docs/ii.22.14-exportedtype-0x27.md
+	public static DataTable GetExportedTypeTable (PEFile module)
+	{
+		DataTable dt = CreateTable (module, ExportedType);
+		dt.Columns.Add (new DataColumn ("Token", typeof (string)));
+		dt.Columns.Add (new DataColumn ("Flags", typeof (string)));
+		dt.Columns.Add (new DataColumn ("TypeDefId", typeof (string)));
+		dt.Columns.Add (new DataColumn ("TypeName", typeof (string)));
+		dt.Columns.Add (new DataColumn ("TypeNamespace", typeof (string)));
+		dt.Columns.Add (new DataColumn ("Implementation", typeof (string)));
+
+		var m = module.Metadata;
+		foreach (var row in m.ExportedTypes) {
+			var et = m.GetExportedType (row);
+			string flags_string;
+			// not in the enum :( but seems to be always used alone
+			if (et.IsForwarder)
+				flags_string = "0x00200000 (TypeForwarder)";
+			else
+				flags_string = GetEnum (et.Attributes);
+			dt.Rows.Add (new object [] {
+				MetadataTokens.GetRowNumber (row),
+				MetadataTokens.GetToken (row).ToString ("x8"),
+				flags_string,
+				et.GetTypeDefinitionId ().ToString ("x8"),
+				GetString (m, et.Name),
+				GetString (m, et.Namespace),
+				MetadataTokens.GetToken (et.Implementation).ToString ("x8"),
 			});
 		}
 		return dt;
