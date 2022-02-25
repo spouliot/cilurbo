@@ -129,7 +129,9 @@ partial class Program {
 			break;
 		case BaseTypeNode btn:
 			if (btn.Tag is ITypeDefinition bt) {
-				var pe = bt.ParentModule.PEFile!;
+				var pe = bt.ParentModule.PEFile;
+				if (pe is null)
+					return;
 				// find the PE node (and load/add it if needed)...
 				var f = metadata_tree.Find (pe);
 				if (f is null) {
