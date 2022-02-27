@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 (7 Feb 2022)
+## 0.1.0 (unreleased)
 
 ### Features
 - Support decompiling (C#) and disassembling (IL) assemblies

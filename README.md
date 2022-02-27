@@ -29,7 +29,6 @@ As long as this remains a proof-of-concept (before 1.0) expect many breaking cha
 * Add missing metadata tables
 * Add decompiler options / preferences
 * Add more analysis tools
-* Add resources
 
 Features are being added on a "as I need them" basis.
 

@@ -152,16 +152,7 @@ partial class Program {
 			break;
 		case ResourceNode res:
 			metadata_tree.Expand (node);
-			switch (Path.GetExtension (res.Resource.Name)) {
-			case ".resources":
-				// TODO - use a datatable to show the resources
-				break;
-			// TODO - images/video/sounds... open externally ?
-			default:
-				// read as text
-				EnsureSourceView ().Show (node.Tag);
-				break;
-			}
+			EnsureResourceView ().Show (res.Resource);
 			metadata_tree.SetFocus ();
 			break;
 		default:
@@ -373,6 +364,17 @@ partial class Program {
 		}
 		tabs.SelectedTab = source_tab;
 		return (source_tab.View as SourceView)!;
+	}
+
+	static readonly TabView.Tab resource_tab = new ("", new ResourceView ());
+
+	public static ResourceView EnsureResourceView ()
+	{
+		if (!tabs.Tabs.Contains (resource_tab)) {
+			tabs.AddTab (resource_tab, true);
+		}
+		tabs.SelectedTab = resource_tab;
+		return (resource_tab.View as ResourceView)!;
 	}
 
 	static readonly TabView.Tab metadata_tab = new ("Metadata", new MetadataView ());
