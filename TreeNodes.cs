@@ -58,6 +58,14 @@ public class AssemblyNode : MetadataNode {
 		}
 		references.Clear ();
 
+		foreach (var res in file.Resources) {
+			references.Add (res.Name, new ResourceNode (res.Name, res, this));
+		}
+		foreach (var node in references.Values) {
+			nodes.Add (node);
+		}
+		references.Clear ();
+
 		List<string> list = new ();
 		foreach (var type in TypeSystem.GetTopLevelTypeDefinitions ()) {
 			if (type.ParentModule.Name != aname)
@@ -71,8 +79,6 @@ public class AssemblyNode : MetadataNode {
 			nodes.Add (new NamespaceNode (ns, aname, TypeSystem, this));
 		}
 		list.Clear ();
-
-		// TODO: add resources
 
 		Children = nodes;
 	}
@@ -97,6 +103,15 @@ public class ModuleReferenceNode : MetadataNode {
 	{
 		Tag = mr;
 		Text = "[r] " + name;
+	}
+}
+
+public class ResourceNode : MetadataNode {
+
+	public ResourceNode (string name, Resource res, MetadataNode parent) : base (parent)
+	{
+		Tag = res;
+		Text = "[s] " + name;
 	}
 }
 
