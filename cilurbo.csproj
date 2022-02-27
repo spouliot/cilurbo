@@ -6,12 +6,25 @@
     <RootNamespace>Cilurbo</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <PackAsTool>true</PackAsTool>
     <VersionPrefix>0.1.0</VersionPrefix>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Copyright>Sebastien Pouliot</Copyright>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <Authors>Sebastien Pouliot</Authors>
+    <PackageTags>tool;decompiler;disassembler</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReleaseNotes>https://github.com/spouliot/cilurbo/blob/master/ChangeLog.md</PackageReleaseNotes>
+    <PackageProjectUrl>https://github.com/spouliot/cilurbo</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="CliWrap" Version="3.4.1" />
-    <PackageReference Include="ICSharpCode.Decompiler" Version="7.2.0.6839-preview4" />
+    <PackageReference Include="ICSharpCode.Decompiler" Version="7.2.0.6843-rc" />
     <PackageReference Include="Terminal.Gui" Version="1.4.0" />
   </ItemGroup>
 
