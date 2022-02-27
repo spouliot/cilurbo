@@ -100,6 +100,18 @@ class SourceView : View {
 			tab.Text = entity.Name;
 			TextView.Text = Language == Languages.IL ? entity.Disassemble () : entity.Decompile ();
 			break;
+		case Resource res:
+			Title = res.Name;
+			tab.Text = res.Name;
+			TextView.Text = "";
+			try {
+				var stream = res.TryOpenStream ();
+				if (stream is not null)
+					TextView.Text = new StreamReader (stream).ReadToEnd ();
+			} catch (Exception ex) {
+				TextView.Text = ex.Message;
+			}
+			break;
 		default:
 			Title = "-";
 			tab.Text = "-";

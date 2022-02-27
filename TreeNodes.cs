@@ -113,6 +113,8 @@ public class ResourceNode : MetadataNode {
 		Tag = res;
 		Text = "[s] " + name;
 	}
+
+	public Resource Resource => (Tag as Resource)!;
 }
 
 public class NamespaceNode : MetadataNode {

@@ -150,6 +150,20 @@ partial class Program {
 				}
 			}
 			break;
+		case ResourceNode res:
+			metadata_tree.Expand (node);
+			switch (Path.GetExtension (res.Resource.Name)) {
+			case ".resources":
+				// TODO - use a datatable to show the resources
+				break;
+			// TODO - images/video/sounds... open externally ?
+			default:
+				// read as text
+				EnsureSourceView ().Show (node.Tag);
+				break;
+			}
+			metadata_tree.SetFocus ();
+			break;
 		default:
 			metadata_tree.Expand (node);
 			EnsureSourceView ().Show (node.Tag);
